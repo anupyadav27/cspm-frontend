@@ -1,0 +1,13 @@
+.loader-wrapper {
+  @apply absolute bg-[var(--color-primary-overlay)] w-[100vw] h-[100vh]
+  left-0 top-0 flex items-center justify-center;
+  z-index: 100;
+
+  position: relative;
+
+  .loader-text {
+    @apply absolute;
+    color: var(--color-primary-dark);
+    font-size: 1.2rem;
+  }
+}

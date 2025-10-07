@@ -1,0 +1,64 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "admin@cspm.com",
+      "password": "admin123",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin",
+      "status": "active",
+      "tenantId": "1",
+      "createdAt": "2024-01-15T10:00:00Z",
+      "lastLogin": "2025-10-03T08:30:00Z"
+    },
+    {
+      "id": "2",
+      "email": "john.doe@cspm.com",
+      "password": "user123",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "user",
+      "status": "active",
+      "tenantId": "1",
+      "createdAt": "2024-02-20T14:30:00Z",
+      "lastLogin": "2025-10-02T16:45:00Z"
+    },
+    {
+      "id": "3",
+      "email": "jane.smith@cspm.com",
+      "password": "user123",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "role": "user",
+      "status": "active",
+      "tenantId": "2",
+      "createdAt": "2024-03-10T09:15:00Z",
+      "lastLogin": "2025-10-03T07:20:00Z"
+    },
+    {
+      "id": "4",
+      "email": "mike.wilson@cspm.com",
+      "password": "user123",
+      "firstName": "Mike",
+      "lastName": "Wilson",
+      "role": "manager",
+      "status": "active",
+      "tenantId": "1",
+      "createdAt": "2024-04-05T11:00:00Z",
+      "lastLogin": "2025-10-01T14:30:00Z"
+    },
+    {
+      "id": "5",
+      "email": "sarah.johnson@cspm.com",
+      "password": "user123",
+      "firstName": "Sarah",
+      "lastName": "Johnson",
+      "role": "user",
+      "status": "inactive",
+      "tenantId": "2",
+      "createdAt": "2024-05-12T15:45:00Z",
+      "lastLogin": "2025-09-15T10:00:00Z"
+    }
+  ]
+}

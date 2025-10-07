@@ -1,0 +1,18 @@
+import dynamic from "next/dynamic";
+import Image from "next/image";
+
+const Portal = dynamic(() => import("@/components/portal"), {ssr: false});
+
+export default function Loader({isLoading}) {
+	return (isLoading
+		&&
+		(
+			<Portal>
+				<div className={`loader-wrapper`}>
+					<Image src={`/loader.svg`} alt={`loader`} width={150} height={150}/>
+					<p className={`loader-text`}>Loading...</p>
+				</div>
+			</Portal>
+		)
+	);
+}

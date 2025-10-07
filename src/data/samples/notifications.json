@@ -1,0 +1,84 @@
+{
+  "notifications": [
+    {
+      "id": "1",
+      "userId": "1",
+      "type": "alert",
+      "title": "Critical Security Alert",
+      "message": "Unauthorized access attempt detected on AWS EC2 instance",
+      "category": "security",
+      "isRead": false,
+      "createdAt": "2025-10-03T08:15:00Z"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "type": "update",
+      "title": "System Update Available",
+      "message": "New compliance checks are available for GDPR framework",
+      "category": "system",
+      "isRead": false,
+      "createdAt": "2025-10-03T07:30:00Z"
+    },
+    {
+      "id": "3",
+      "userId": "1",
+      "type": "info",
+      "title": "Monthly Report Ready",
+      "message": "Your September security posture report is ready to download",
+      "category": "reports",
+      "isRead": true,
+      "createdAt": "2025-10-01T10:00:00Z"
+    },
+    {
+      "id": "4",
+      "userId": "2",
+      "type": "alert",
+      "title": "Compliance Violation Detected",
+      "message": "S3 bucket configured without encryption",
+      "category": "compliance",
+      "isRead": false,
+      "createdAt": "2025-10-02T14:20:00Z"
+    },
+    {
+      "id": "5",
+      "userId": "1",
+      "type": "update",
+      "title": "New User Added",
+      "message": "Sarah Johnson has been added to your tenant",
+      "category": "system",
+      "isRead": true,
+      "createdAt": "2025-09-28T16:45:00Z"
+    }
+  ],
+  "notificationSettings": {
+    "1": {
+      "userId": "1",
+      "emailEnabled": true,
+      "emailFrequency": "immediate",
+      "webhookEnabled": true,
+      "webhookUrl": "https://webhook.example.com/cspm",
+      "siemEnabled": false,
+      "categories": {
+        "security": true,
+        "compliance": true,
+        "system": true,
+        "reports": false
+      }
+    },
+    "2": {
+      "userId": "2",
+      "emailEnabled": true,
+      "emailFrequency": "daily",
+      "webhookEnabled": false,
+      "webhookUrl": "",
+      "siemEnabled": false,
+      "categories": {
+        "security": true,
+        "compliance": true,
+        "system": false,
+        "reports": true
+      }
+    }
+  }
+}
