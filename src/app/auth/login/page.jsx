@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {useFormik} from "formik";
 import * as Yup from "yup";
@@ -8,7 +8,7 @@ import Button from "@/components/button";
 import Input from "@/components/input";
 import {useEffect, useState} from "react";
 import {FiEye, FiEyeOff} from "react-icons/fi";
-import {FaUserCircle} from "react-icons/fa"
+import {FaUserCircle} from "react-icons/fa";
 import {useAppContext} from "@/context/appContext";
 
 export default function Login() {
@@ -18,7 +18,7 @@ export default function Login() {
 	
 	useEffect(() => {
 		if (state.isAuthenticated) {
-			router.push('/dashboard')
+			router.push("/dashboard");
 		}
 	}, [state.isAuthenticated, router]);
 	
@@ -36,45 +36,75 @@ export default function Login() {
 				.min(8, "Password must be at least 8 characters")
 				.required("Password is required"),
 		}),
-		onSubmit: async (values, {setSubmitting}) => {
+		onSubmit: async (values, {setSubmitting, setFieldError}) => {
 			try {
-				const fakeToken = "secure.jwt.token";
-				const fakeUser = {id: 1, name: "Ayush Jha", email: "ayush@example.com"};
-				
-				dispatch({
-					type: "LOGIN",
-					payload: {user: fakeUser, role: "admin", token: fakeToken},
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+					method: "POST",
+					headers: {"Content-Type": "application/json"},
+					credentials: values.rememberMe ? "include" : "same-origin",
+					body: JSON.stringify(values),
 				});
 				
+				const data = await res.json();
+				
+				if (res.ok) {
+					dispatch({
+						type: "LOGIN",
+						payload: {
+							user: data.user,
+							token: data.token,
+							role: data.user.roles || null,
+							rememberMe: values.rememberMe,
+						},
+					});
+					
+					router.push("/dashboard");
+					return;
+				}
+				
+				switch (res.status) {
+					case 400:
+						setFieldError("email", "Email and password are required");
+						break;
+					case 401:
+						setFieldError("password", "Incorrect password. Please try again.");
+						break;
+					case 404:
+						setFieldError("email", "User not found");
+						break;
+					case 429:
+						alert("Too many login attempts. Please try again later.");
+						break;
+					default:
+						alert(data.message || "An unexpected error occurred.");
+				}
 			} catch (error) {
-			
+				console.error("Login error:", error);
+				alert("Network error. Please check your connection.");
 			} finally {
 				setSubmitting(false);
 			}
 		},
 	});
 	
-	const handleShowPassword = () => {
-		setShowPassword(!showPassword)
-	}
+	const handleShowPassword = () => setShowPassword(!showPassword);
 	
 	const handleSSOLogin = () => {
-	
-	}
+	};
 	
 	return (
-		<div className={`login`}>
-			<div className={`login__container`}>
-				<div className={`login__form-section`}>
-					<div className={`login__form`}>
-						<p className={`login__form-subtitle`}>Log in to admin portal</p>
-						<h1 className={`login__form-title`}>Sign In</h1>
+		<div className="login">
+			<div className="login__container">
+				<div className="login__form-section">
+					<div className="login__form">
+						<p className="login__form-subtitle">Log in to admin portal</p>
+						<h1 className="login__form-title">Sign In</h1>
 						
 						<form onSubmit={formik.handleSubmit} className="space-y-4">
 							<Input
-								type={`email`}
-								name={`email`}
-								placeholder={`Enter your email`}
+								type="email"
+								name="email"
+								placeholder="Enter your email"
 								value={formik.values.email}
 								onChange={formik.handleChange}
 								onBlur={formik.handleBlur}
@@ -89,24 +119,16 @@ export default function Login() {
 							
 							<Input
 								type={showPassword ? "text" : "password"}
-								name={`password`}
+								name="password"
 								placeholder="Enter your password"
 								value={formik.values.password}
 								onChange={formik.handleChange}
 								onBlur={formik.handleBlur}
 								iconRight={
 									showPassword ? (
-										<FiEye
-											size={20}
-											onClick={handleShowPassword}
-											className={`cursor-pointer`}
-										/>
+										<FiEye size={20} onClick={handleShowPassword} className="cursor-pointer"/>
 									) : (
-										<FiEyeOff
-											size={20}
-											onClick={handleShowPassword}
-											className={`cursor-pointer`}
-										/>
+										<FiEyeOff size={20} onClick={handleShowPassword} className="cursor-pointer"/>
 									)
 								}
 								secondary
@@ -116,14 +138,13 @@ export default function Login() {
 							{formik.errors.password && formik.touched.password && (
 								<p className="text-error text-sm">{formik.errors.password}</p>
 							)}
-							<div className={`login__form-remember-me`}>
-								<p>
-									Remember Me
-								</p>
+							
+							<div className="login__form-remember-me">
+								<p>Remember Me</p>
 								<input
-									type={`checkbox`}
-									name={`remember me`}
-									value={formik.values.rememberMe}
+									type="checkbox"
+									name="rememberMe"
+									checked={formik.values.rememberMe}
 									onChange={formik.handleChange}
 									onBlur={formik.handleBlur}
 								/>
@@ -132,30 +153,33 @@ export default function Login() {
 							<Button
 								type="submit"
 								text="Submit"
-								className={`btn-primary !w-full`}
+								className="btn-primary !w-full"
 								isLoading={formik.isSubmitting}
 							/>
 						</form>
+						
 						<Button
-							type={`SSO Login`}
-							text={`SSO Login`}
-							className={`btn-secondary !w-full mt-2`}
+							type="button"
+							text="SSO Login"
+							className="btn-secondary !w-full mt-2"
 							onClick={handleSSOLogin}
 						/>
-						<div className={`login__form-forgot-password`} onClick={() => {
-							router.push('/forget-password')
-						}}>
+						
+						<div
+							className="login__form-forgot-password"
+							onClick={() => router.push("/forget-password")}
+						>
 							<p>Forgot Password</p>
 						</div>
 					</div>
 				</div>
 				
-				<div className={`login__image-section`}>
+				<div className="login__image-section">
 					<Image
-						src={"/login-illustration.svg"}
-						alt={`login-illustration`}
+						src="/login-illustration.svg"
+						alt="login-illustration"
 						fill
-						className={`login__image`}
+						className="login__image"
 					/>
 				</div>
 			</div>

@@ -19,18 +19,19 @@ export function appReducer(state, action) {
 		case 'LOGIN':
 			newState = {
 				...state,
-				user: action.payload.user,
-				role: action.payload.role || null,
+				user: action.payload.user || null,
+				role: action.payload.user?.roles?.[0] || null,
 				token: action.payload.token || null,
 				isAuthenticated: true,
+				isLoading: false,
 			};
 			break;
 		
 		case 'SET_USER':
 			newState = {
 				...state,
-				user: action.payload.user,
-				role: action.payload.role,
+				user: action.payload.user || null,
+				role: action.payload.user?.roles?.[0] || null,
 			};
 			break;
 		
