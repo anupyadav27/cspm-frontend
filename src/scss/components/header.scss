@@ -2,48 +2,116 @@ $header-height: 6vh;
 
 .header {
   height: $header-height;
-  min-height: calc($header-height + 1.1rem);
+  min-height: calc($header-height + 1rem);
   display: flex;
   align-items: center;
-  padding: 0 1rem;
   background-color: var(--color-secondary);
   color: #fff;
-  border: 1px solid var(--color-gray-200);
-  box-sizing: border-box;
-  z-index: 20;
-
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 30;
 
   &__content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+    @apply flex justify-between items-center w-full;
   }
 
   &__title {
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--color-primary-dark);
-    margin: 2rem;
+    margin: 0;
   }
 
   &__actions {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
+    @apply flex items-center gap-4;
   }
 
-  &__btn {
-    background: var(--color-secondary);
-    padding: 0.3rem 0.7rem;
-    border-radius: 0.35rem;
-    cursor: pointer;
-    font-size: 0.85rem;
+  &__tenant {
+    position: relative;
+  }
+
+  &__tenant-btn {
+    @apply flex items-center gap-1 px-3 py-2 text-sm rounded-md transition-colors;
+    background: var(--color-primary);
+    color: #fff;
     border: none;
-    transition: background 0.18s ease;
+    cursor: pointer;
 
     &:hover {
-      background: var(--color-hover);
+      background: var(--color-primary-dark);
+    }
+  }
+
+  &__tenant-icon {
+    @apply w-4 h-4 transition-transform;
+  }
+
+  &__dropdown {
+    @apply absolute bg-white shadow-md rounded-md overflow-hidden mt-2 w-48 text-gray-800;
+    z-index: 50;
+  }
+
+  &__dropdown--right {
+    right: 0;
+  }
+
+  &__dropdown-item {
+    @apply block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors;
+
+    &--danger {
+      @apply text-red-600 hover:bg-red-50;
+    }
+  }
+
+  &__notifications {
+    position: relative;
+  }
+
+  &__icon-btn {
+    @apply relative p-2 rounded-md hover:bg-gray-100 transition-colors;
+    background: transparent;
+    color: var(--color-primary-dark);
+  }
+
+  &__icon {
+    @apply w-6 h-6;
+  }
+
+  &__badge {
+    @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center;
+  }
+
+  &__user {
+    position: relative;
+  }
+
+  &__user-btn {
+    @apply flex items-center p-1 rounded-md hover:bg-gray-100 transition-colors;
+    background: transparent;
+  }
+
+  &__avatar {
+    @apply flex items-center justify-center w-8 h-8 text-sm font-semibold rounded-full;
+    background: var(--color-primary-dark);
+    color: white;
+  }
+
+  @media (max-width: 768px) {
+    &__title {
+      font-size: 1rem;
+    }
+
+    &__actions {
+      @apply gap-2;
+    }
+
+    &__tenant-btn {
+      @apply px-2 py-1 text-xs;
+    }
+
+    &__dropdown {
+      width: 10rem;
     }
   }
 }

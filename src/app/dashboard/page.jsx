@@ -1,20 +1,14 @@
-"use client";
-
-
+'use client';
 import Layout from "@/components/layout";
-import Button from "@/components/button";
-import {useLogout} from "@/hooks/useLogout";
+import {useAppContext} from "@/context/appContext";
 
-
-export default function DashBoard() {
-	const {handleLogout} = useLogout();
+export default function Dashboard() {
+	const {state} = useAppContext();
 	
-	return (<div>
+	return (
 		<Layout>
-			<Button
-				onClick={handleLogout}
-			/>
+			{JSON.stringify(state)}
 		
 		</Layout>
-	</div>)
+	);
 }
