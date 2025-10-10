@@ -8,23 +8,24 @@ $header-height: 6vh;
   align-items: stretch;
   height: 100vh;
   box-sizing: border-box;
+  background-color: var(--color-primary-dark);
 
   &__main {
     width: $sidebar-main-width;
     min-width: $sidebar-main-width;
-    background-color: var(--color-secondary);
+    background-color: var(--color-primary-dark);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 0 1rem;
+    padding: 0 0.3rem 1rem;
     box-sizing: border-box;
     border: 1px solid var(--color-gray-200);
     z-index: 10;
   }
 
   &__title {
-    color: var(--color-primary-dark);
-    background-color: var(--color-secondary);
+    color: var(--color-secondary);
+    background-color: var(--color-primary-dark);
     font-size: medium;
     font-weight: bold;
     display: flex;
@@ -38,9 +39,9 @@ $header-height: 6vh;
 
   &__item {
     @apply flex flex-col items-center justify-center w-full cursor-pointer;
-    padding: 0.5rem;
+    padding: 0.4rem;
     border-radius: 0.3rem;
-    margin: 0.2rem 0;
+    margin: 0.2rem;
     color: white;
     width: 100%;
     box-sizing: border-box;
@@ -67,16 +68,17 @@ $header-height: 6vh;
 
   &__icon {
     font-size: 1.3rem;
-    color: var(--color-primary-dark);
+    color: var(--color-secondary);
     margin-bottom: 0.3rem;
     transition: color 0.18s ease;
+
 
 
   }
 
   &__label {
     font-size: 0.75rem;
-    color: var(--color-primary-dark);
+    color: var(--color-secondary);
     text-align: center;
     white-space: nowrap;
     overflow: hidden;

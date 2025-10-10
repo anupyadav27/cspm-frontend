@@ -40,43 +40,36 @@ export const AppProvider = ({children}) => {
 	}, []);
 	
 	useEffect(() => {
-		const PUBLIC_ROUTES = ['/auth/login', '/auth/forget-password'];
-		if (!state.isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
-			router.replace('/auth/login');
-		}
-	}, [state.isAuthenticated, pathname, router]);
-	
-	useEffect(() => {
 		const initializeApp = async () => {
 			setLoading(true);
-			let restoredUser = null;
 			
 			try {
-				const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
-					method: 'POST',
-					credentials: 'include',
-				});
-				
-				const data = await res.json();
-				
-				if (res.ok && data.user) {
-					restoredUser = data.user;
-					dispatch({
-						type: 'LOGIN',
-						payload: {
-							user: restoredUser,
-							token: data.token,
-						},
+				if (!state.isAuthenticated || !state.user) {
+					const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
+						method: 'POST',
+						credentials: 'include',
 					});
-				} else {
-					dispatch({type: 'LOGOUT'});
+					
+					const data = await res.json();
+					
+					if (res.ok && data.user) {
+						dispatch({
+							type: 'LOGIN',
+							payload: {
+								user: data.user,
+								token: data.token,
+							},
+						});
+					} else {
+						dispatch({type: 'LOGOUT'});
+					}
 				}
 			} catch (err) {
 				console.error('Token refresh failed:', err);
 				dispatch({type: 'LOGOUT'});
 			}
 			
-			if (restoredUser || !state.user) {
+			if (state.user) {
 				dispatch({type: 'SET_TENANTS', payload: tenantsData.tenants});
 				dispatch({type: 'SELECT_TENANT', payload: tenantsData.tenants[0]});
 				dispatch({type: 'SET_NOTIFICATIONS', payload: notificationsData.notifications});
@@ -91,6 +84,15 @@ export const AppProvider = ({children}) => {
 		
 		initializeApp();
 	}, []);
+	
+	useEffect(() => {
+		if (!loading) {
+			const PUBLIC_ROUTES = ['/auth/login', '/auth/forget-password'];
+			if (!state.isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
+				router.replace('/auth/login');
+			}
+		}
+	}, [state.isAuthenticated, pathname, router, loading]);
 	
 	return (
 		<AppContext.Provider value={{state, dispatch, loading}}>

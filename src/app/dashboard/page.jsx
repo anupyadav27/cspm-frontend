@@ -1,20 +1,19 @@
 "use client";
 
 
-import {useAppContext} from "@/context/appContext";
 import Layout from "@/components/layout";
+import Button from "@/components/button";
+import {useLogout} from "@/hooks/useLogout";
 
 
 export default function DashBoard() {
-	const {state, dispatch} = useAppContext();
-	
-	const handleLogout = () => {
-		dispatch({type: "LOGOUT"});
-		sessionStorage.removeItem("authState");
-	};
+	const {handleLogout} = useLogout();
 	
 	return (<div>
 		<Layout>
+			<Button
+				onClick={handleLogout}
+			/>
 		
 		</Layout>
 	</div>)

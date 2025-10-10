@@ -26,8 +26,5 @@ export const useAuthActions = () => {
 		
 		return {success: false, error: 'Invalid email or password'};
 	};
-	
-	const logout = () => dispatch({type: 'LOGOUT'});
-	
-	return {state, login, logout};
+	return {state, login};
 };
