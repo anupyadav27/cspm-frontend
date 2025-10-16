@@ -1,51 +1,83 @@
 'use client';
 
-import {useState} from 'react';
-import {useRouter} from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import notificationsData from '@/data/samples/notifications.json';
-import {useTenantActions} from '@/context/appContext/useTenantActions';
-import {useAuthActions} from '@/context/appContext/useAuthActions';
-import {useAppContext} from '@/context/appContext';
+import { useTenantActions } from '@/context/appContext/useTenantActions';
+import { useAuthActions } from '@/context/appContext/useAuthActions';
+import { useAppContext } from '@/context/appContext';
 
-export default function Header({activeItem}) {
+export default function Header({ title }) {
 	const router = useRouter();
 	const [showUserMenu, setShowUserMenu] = useState(false);
 	const [showTenantMenu, setShowTenantMenu] = useState(false);
-	
-	const {state} = useAppContext();
-	const {handleLogout} = useAuthActions();
-	const {switchTenant} = useTenantActions();
-	
-	const currentUser = state?.user?.name || {first: 'A', last: 'J'};
-	
-	const tenants = state.tenants || [];
-	const selectedTenant =
-		state.selectedTenant ||
-		tenants[0] || {name: 'Default Tenant'};
-	
-	const unreadCount =
-		notificationsData.notifications?.filter((n) => !n.read).length || 0;
-	
+	const [currentUser, setCurrentUser] = useState(null);
+	const [selectedTenant, setSelectedTenant] = useState(null);
+	const [tenants, setTenants] = useState([]);
+	const { state,dispatch } = useAppContext();
+	const { handleLogout } = useAuthActions();
+	const { switchTenant } = useTenantActions();
+
+	const userMenuRef = useRef(null);
+	const tenantMenuRef = useRef(null);
+
+	useEffect(() => {
+		setCurrentUser(state?.user);
+		setTenants(state?.tenants || []);
+		setSelectedTenant(state?.selectedTenant || null);
+	}, [state]);
+
+	const unreadCount = notificationsData.notifications?.filter((n) => !n.read).length || 0;
+
 	const handleTenantSwitch = (tenantId) => {
 		switchTenant(tenantId);
 		setShowTenantMenu(false);
 	};
 	
+	const handleClick = (link)=>{
+		dispatch({type:'SET_LOADING',payload:true})
+		router.push(link)
+	}
+	
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (
+				userMenuRef.current &&
+				!userMenuRef.current.contains(event.target)
+			) {
+				setShowUserMenu(false);
+			}
+			if (
+				tenantMenuRef.current &&
+				!tenantMenuRef.current.contains(event.target)
+			) {
+				setShowTenantMenu(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, []);
+
 	return (
 		<header className="header">
 			<div className="header__content">
 				<div className="header__left">
-					<h1 className="header__title">{activeItem?.label}</h1>
+					<h1 className="header__title">{title}</h1>
 				</div>
-				
+
 				<div className="header__actions">
-					{}
-					<div className="header__tenant">
+					<div className="header__tenant" ref={tenantMenuRef}>
 						<button
 							className="header__tenant-btn"
-							onClick={() => setShowTenantMenu(!showTenantMenu)}
+							onClick={() => {
+								setShowTenantMenu(!showTenantMenu);
+								setShowUserMenu(false);
+							}}
 						>
-							{selectedTenant.name}
+							{selectedTenant?.name || 'Select Tenant'}
 							<svg
 								className={`header__tenant-icon ${
 									showTenantMenu ? 'rotate-180' : ''
@@ -62,7 +94,7 @@ export default function Header({activeItem}) {
 								/>
 							</svg>
 						</button>
-						
+
 						{showTenantMenu && (
 							<div className="header__dropdown">
 								{tenants.map((tenant) => (
@@ -70,7 +102,7 @@ export default function Header({activeItem}) {
 										key={tenant.id}
 										onClick={() => handleTenantSwitch(tenant.id)}
 										className={`header__dropdown-item ${
-											selectedTenant.id === tenant.id ? 'active' : ''
+											selectedTenant?.id === tenant.id ? 'active' : ''
 										}`}
 									>
 										{tenant.name}
@@ -79,12 +111,11 @@ export default function Header({activeItem}) {
 							</div>
 						)}
 					</div>
-					
-					{}
+
 					<div className="header__notifications">
 						<button
 							className="header__icon-btn"
-							onClick={() => router.push('/notifications')}
+							onClick={()=>handleClick(`/notifications`)}
 						>
 							<svg
 								className="header__icon"
@@ -104,27 +135,29 @@ export default function Header({activeItem}) {
 							)}
 						</button>
 					</div>
-					
-					{}
-					<div className="header__user">
+
+					<div className="header__user" ref={userMenuRef}>
 						<button
 							className="header__user-btn"
-							onClick={() => setShowUserMenu(!showUserMenu)}
+							onClick={() => {
+								setShowUserMenu(!showUserMenu);
+								setShowTenantMenu(false);
+							}}
 						>
 							<div className="header__avatar">
-								{currentUser?.first?.[0]?.toUpperCase()}
-								{currentUser?.last?.[0]?.toUpperCase()}
+								{currentUser?.name?.first?.[0]?.toUpperCase()}
+								{currentUser?.name?.last?.[0]?.toUpperCase()}
 							</div>
 						</button>
-						
+
 						{showUserMenu && (
 							<div className="header__dropdown header__dropdown--right">
-								<a href="/profile" className="header__dropdown-item">
+								<p onClick={()=>handleClick(`/profile`)} className="header__dropdown-item">
 									Profile
-								</a>
-								<a href="/settings" className="header__dropdown-item">
+								</p>
+								<p onClick={()=>handleClick(`/settings`)} className="header__dropdown-item">
 									Settings
-								</a>
+								</p>
 								<button
 									onClick={handleLogout}
 									className="header__dropdown-item header__dropdown-item--danger"

@@ -86,7 +86,7 @@ appState = {
 		"id": "4",
 		"userId": "2",
 		"type": "alert",
-		"title": "Compliance Violation Detected",
+		"title": "compliance Violation Detected",
 		"message": "S3 bucket configured without encryption",
 		"category": "compliance",
 		"isRead": false,

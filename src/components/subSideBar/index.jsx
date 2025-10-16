@@ -1,79 +1,37 @@
 "use client";
 
-import {FaBalanceScale, FaBox, FaBug, FaChartBar, FaFileAlt, FaShieldAlt, FaTachometerAlt} from "react-icons/fa";
-import {usePathname} from "next/navigation";
+import { FaChevronRight, FaChevronLeft } from "react-icons/fa";
+import { menuItems } from "@/data/components/menuItems";
+import { usePathname } from "next/navigation";
 
-const menuItems = [
-	{
-		id: "dashboard",
-		label: "Dashboard",
-		icon: <FaTachometerAlt/>,
-		subMenu: ["Overview", "Activity", "Stats"],
-		link: "/dashboard",
-	},
-	{
-		id: "assets",
-		label: "Assets",
-		icon: <FaBox/>,
-		subMenu: ["Servers", "Databases", "Applications"],
-		link: "/assets",
-	},
-	{
-		id: "vulnerabilities",
-		label: "Vulnerabilities",
-		icon: <FaBug/>,
-		subMenu: ["Open Issues", "Resolved", "Trends"],
-		link: "/vulnerabilities",
-	},
-	{
-		id: "threats",
-		label: "Threats",
-		icon: <FaShieldAlt/>,
-		subMenu: ["Detections", "Indicators", "Responses"],
-		link: "/threats",
-	},
-	{
-		id: "compliance",
-		label: "Compliance",
-		icon: <FaBalanceScale/>,
-		subMenu: ["Policies", "Audits", "Reports"],
-		link: "/compliance",
-	},
-	{
-		id: "policies",
-		label: "Policies",
-		icon: <FaFileAlt/>,
-		subMenu: ["Create Policy", "Manage Policies"],
-		link: "/policies",
-	},
-	{
-		id: "reports",
-		label: "Reports",
-		icon: <FaChartBar/>,
-		subMenu: ["Daily", "Weekly", "Custom"],
-		link: "/reports",
-	},
-	{
-		id: "settings",
-		subMenu: ["Profile", "Users", "Integrations"],
-		link: "/settings",
-	},
-];
+export default function SubSideBar({ isOpen, activeItem, toggleSubSidebar }) {
+  const pathname = usePathname();
+  const menu = activeItem || menuItems.find((item) => pathname.startsWith(item.link));
+
+  if (!menu) return null;
+
+  return (
+    <>
+      <button
+        className={`sub-sidebar__toggle ${isOpen ? "open" : ""}`}
+        onClick={toggleSubSidebar}
+      >
+        {isOpen ? (
+          <FaChevronLeft size={16} />
+        ) : (
+          <FaChevronRight size={16} />
+        )}
+      </button>
+
+      <aside className={`sub-sidebar ${isOpen ? "open" : ""}`}>
+        {menu.subMenu?.map((sub, idx) => (
+          <div key={idx} className="sub-sidebar__item">
+            {sub}
+          </div>
+        ))}
 
 
-export default function SubSideBar({isOpen}) {
-	if (!isOpen) return null;
-	const pathname = usePathname()
-	const menu = menuItems.find((item) => item.link === pathname);
-	
-	
-	return (
-		<aside className="sub-sidebar">
-			{menu.subMenu?.map((sub, idx) => (
-				<div key={idx} className="sub-sidebar__item">
-					{sub}
-				</div>
-			))}
-		</aside>
-	);
+      </aside>
+    </>
+  );
 }

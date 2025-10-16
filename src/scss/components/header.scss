@@ -57,7 +57,7 @@ $header-height: 6vh;
   }
 
   &__dropdown-item {
-    @apply block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors;
+    @apply block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer;
 
     &--danger {
       @apply text-red-600 hover:bg-red-50;
@@ -72,6 +72,7 @@ $header-height: 6vh;
     @apply relative p-2 rounded-md hover:bg-gray-100 transition-colors;
     background: transparent;
     color: var(--color-primary-dark);
+    cursor: pointer;
   }
 
   &__icon {
@@ -89,6 +90,7 @@ $header-height: 6vh;
   &__user-btn {
     @apply flex items-center p-1 rounded-md hover:bg-gray-100 transition-colors;
     background: transparent;
+    cursor: pointer;
   }
 
   &__avatar {

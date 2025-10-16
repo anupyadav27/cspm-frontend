@@ -65,7 +65,6 @@ export const AppProvider = ({children}) => {
 					}
 				}
 			} catch (err) {
-				console.error('Token refresh failed:', err);
 				dispatch({type: 'LOGOUT'});
 			}
 			

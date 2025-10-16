@@ -78,6 +78,10 @@ export function appReducer(state, action) {
 			);
 			break;
 		
+		case 'SET_LOADING':
+			newState.isLoading = !!action.payload;
+			break;
+		
 		default:
 			return state;
 	}

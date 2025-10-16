@@ -16,7 +16,8 @@ export const metadata = {
 };
 
 export default function RootLayout({children}) {
-	return (<html>
+	return (
+		<html>
 	<body
 		className={`antialiased`}
 	>

@@ -39,11 +39,12 @@ export const useAuthActions = () => {
 	
 	const handleLogout = async () => {
 		try {
-			await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+			const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
 				method: 'POST',
 				credentials: 'include',
 			}).catch(() => {
 			});
+			const data = await res.json();
 			
 			sessionStorage.removeItem('appState');
 			dispatch({type: 'LOGOUT'});
@@ -53,9 +54,9 @@ export const useAuthActions = () => {
 				document.cookie = `${name}=; Max-Age=0; path=/;`;
 			});
 			
-			window.location.href = '/auth/login';
+				window.location.href = '/auth/login';
+		
 		} catch (error) {
-			console.error('Logout failed:', error);
 			sessionStorage.removeItem('appState');
 			dispatch({type: 'LOGOUT'});
 			window.location.href = '/auth/login';

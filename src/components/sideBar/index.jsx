@@ -1,6 +1,5 @@
 "use client";
 
-
 import {menuItems} from "@/data/components/menuItems";
 
 export default function Sidebar({ activeItem, onItemClick }) {
