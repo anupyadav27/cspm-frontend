@@ -41,7 +41,7 @@ export default function Login() {
 				const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
 					method: "POST",
 					headers: {"Content-Type": "application/json"},
-					credentials: values.rememberMe ? "include" : "same-origin",
+					credentials: "include" ,
 					body: JSON.stringify(values),
 				});
 				
@@ -52,7 +52,6 @@ export default function Login() {
 						type: "LOGIN",
 						payload: {
 							user: data.user,
-							token: data.token,
 							role: data.user.roles || null,
 							rememberMe: values.rememberMe,
 						},

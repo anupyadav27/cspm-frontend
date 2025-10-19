@@ -1,9 +1,8 @@
 'use client';
 
-import {createContext, useContext, useEffect, useReducer, useState} from 'react';
+import {createContext, useContext, useReducer, useState,useEffect} from 'react';
 import {usePathname, useRouter} from 'next/navigation';
 import {appReducer, initialState} from './reducer';
-import tenantsData from '@/data/samples/tenants.json';
 import notificationsData from '@/data/samples/notifications.json';
 
 const AppContext = createContext();
@@ -39,16 +38,23 @@ export const AppProvider = ({children}) => {
 		return () => window.removeEventListener('storage', handleStorage);
 	}, []);
 	
+	
 	useEffect(() => {
 		const initializeApp = async () => {
 			setLoading(true);
 			
 			try {
-				if (!state.isAuthenticated || !state.user) {
-					const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
-						method: 'POST',
-						credentials: 'include',
-					});
+				let user = state.user;
+				let isAuthenticated = state.isAuthenticated;
+				
+				if (!isAuthenticated || !user) {
+					const res = await fetch(
+						`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`,
+						{
+							method: 'POST',
+							credentials: 'include',
+						}
+					);
 					
 					const data = await res.json();
 					
@@ -60,29 +66,60 @@ export const AppProvider = ({children}) => {
 								token: data.token,
 							},
 						});
+						
+						user = data.user;
+						isAuthenticated = true;
 					} else {
 						dispatch({type: 'LOGOUT'});
+						setLoading(false);
+						return;
 					}
 				}
-			} catch (err) {
+				
+				if (isAuthenticated && user) {
+					const tenantRes = await fetch(
+						`${process.env.NEXT_PUBLIC_API_URL}/api/tenants`,
+						{
+							method: 'GET',
+							credentials: 'include',
+						}
+					);
+					
+					const tenantData = await tenantRes.json();
+					
+					dispatch({
+						type: 'SET_TENANTS',
+						payload: tenantData || {data: [], pagination: {}},
+					});
+					
+					if (tenantData?.data?.length > 0) {
+						dispatch({
+							type: 'SELECT_TENANT',
+							payload: tenantData.data[0],
+						});
+					}
+					
+					dispatch({
+						type: 'SET_NOTIFICATIONS',
+						payload: notificationsData.notifications || [],
+					});
+					
+					dispatch({
+						type: 'SET_NOTIFICATION_SETTINGS',
+						payload: notificationsData.notificationSettings || {},
+					});
+				}
+			} catch (error) {
+				console.error('App initialization failed:', error);
 				dispatch({type: 'LOGOUT'});
+			} finally {
+				setLoading(false);
 			}
-			
-			if (state.user) {
-				dispatch({type: 'SET_TENANTS', payload: tenantsData.tenants});
-				dispatch({type: 'SELECT_TENANT', payload: tenantsData.tenants[0]});
-				dispatch({type: 'SET_NOTIFICATIONS', payload: notificationsData.notifications});
-				dispatch({
-					type: 'SET_NOTIFICATION_SETTINGS',
-					payload: notificationsData.notificationSettings || {},
-				});
-			}
-			
-			setLoading(false);
 		};
 		
 		initializeApp();
 	}, []);
+	
 	
 	useEffect(() => {
 		if (!loading) {

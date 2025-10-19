@@ -1,11 +1,11 @@
-import tenantsData from '@/data/samples/tenants.json';
-
 export const initialState = {
 	user: null,
 	role: null,
-	token: null,
 	isAuthenticated: false,
-	tenants: tenantsData.tenants || [],
+	tenants: {
+		data: [],
+		pagination: {},
+	},
 	selectedTenant: null,
 	notifications: [],
 	notificationSettings: null,
@@ -21,7 +21,6 @@ export function appReducer(state, action) {
 				...state,
 				user: action.payload.user || null,
 				role: action.payload.user?.roles?.[0] || null,
-				token: action.payload.token || null,
 				isAuthenticated: true,
 				isLoading: false,
 			};
@@ -45,48 +44,78 @@ export function appReducer(state, action) {
 			break;
 		
 		case 'SET_TENANTS':
-			newState.tenants = action.payload;
+			newState = {
+				...state,
+				tenants: {
+					data: Array.isArray(action.payload?.data)
+						? action.payload.data
+						: [],
+					pagination: action.payload?.pagination || {},
+				},
+			};
 			break;
 		
 		case 'SELECT_TENANT':
-			newState.selectedTenant = action.payload;
+			newState = {
+				...state,
+				selectedTenant: action.payload,
+			};
 			break;
 		
 		case 'SET_NOTIFICATIONS':
-			newState.notifications = action.payload;
+			newState = {
+				...state,
+				notifications: action.payload || [],
+			};
 			break;
 		
 		case 'SET_NOTIFICATION_SETTINGS':
-			newState.notificationSettings = action.payload;
+			newState = {
+				...state,
+				notificationSettings: action.payload,
+			};
 			break;
 		
 		case 'MARK_AS_READ':
-			newState.notifications = state.notifications.map((n) =>
-				n.id === action.payload ? {...n, isRead: true} : n
-			);
+			newState = {
+				...state,
+				notifications: state.notifications.map((n) =>
+					n.id === action.payload ? {...n, isRead: true} : n
+				),
+			};
 			break;
 		
 		case 'MARK_AS_UNREAD':
-			newState.notifications = state.notifications.map((n) =>
-				n.id === action.payload ? {...n, isRead: false} : n
-			);
+			newState = {
+				...state,
+				notifications: state.notifications.map((n) =>
+					n.id === action.payload ? {...n, isRead: false} : n
+				),
+			};
 			break;
 		
 		case 'DELETE_NOTIFICATION':
-			newState.notifications = state.notifications.filter(
-				(n) => n.id !== action.payload
-			);
+			newState = {
+				...state,
+				notifications: state.notifications.filter(
+					(n) => n.id !== action.payload
+				),
+			};
 			break;
 		
 		case 'SET_LOADING':
-			newState.isLoading = !!action.payload;
+			newState = {
+				...state,
+				isLoading: !!action.payload,
+			};
 			break;
 		
 		default:
 			return state;
 	}
 	
-	if (typeof window !== 'undefined')
+	if (typeof window !== 'undefined') {
 		sessionStorage.setItem('appState', JSON.stringify(newState));
+	}
 	return newState;
 }

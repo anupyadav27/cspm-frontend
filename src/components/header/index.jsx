@@ -95,7 +95,7 @@ export default function Header({ title }) {
 							</svg>
 						</button>
 
-						{showTenantMenu && (
+						{showTenantMenu && tenants.length>1 && (
 							<div className="header__dropdown">
 								{tenants.map((tenant) => (
 									<button
