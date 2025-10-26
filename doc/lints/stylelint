@@ -1,0 +1,20 @@
+// module.exports = {
+//   extends: ["stylelint-config-standard-scss", "stylelint-config-recess-order"],
+//   plugins: ["stylelint-scss"],
+//   rules: {
+//     "scss/at-rule-no-unknown": [
+//       true,
+//       {
+//         ignoreAtRules: ["theme", "include", "mixin", "if", "else", "for", "each"],
+//       },
+//     ],
+//     "selector-class-pattern":
+//       "^[a-z0-9]+(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+//     "selector-id-pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+//     "color-hex-length": "short",
+//     "block-no-empty": true,
+//     "unit-allowed-list": ["em", "rem", "%", "px", "fr", "vh", "vw", "s", "ms", "deg"],
+//     "at-rule-no-unknown": null,
+//     "no-descending-specificity": null,
+//   },
+// };

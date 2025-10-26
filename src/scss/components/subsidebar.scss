@@ -3,74 +3,77 @@ $sidebar-sub-width: 12rem;
 $header-height: 6vh;
 
 .sub-sidebar {
-  background-color: var(--color-secondary);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-  border-left: 1px solid #e5e7eb;
-  width: 0;
-  padding-top: 6vh;
-  flex-shrink: 0;
-  height: calc(100vh - #{$header-height});
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s ease-in-out;
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-
-  &.open {
-    width: $sidebar-sub-width;
-  }
-
-  &__item {
-    @apply px-4 py-2 cursor-pointer rounded-md hover:bg-gray-100;
-    font-size: 0.95rem;
-    color: #333;
-    transition: background 0.2s ease, transform 0.2s ease;
-
-    &:hover {
-      transform: translateX(2px);
-    }
-  }
-
-  &__close {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 2.5rem;
-    height: 2.5rem;
-    background-color: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: 4px;
+    position: relative;
+    z-index: 2;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  &__toggle {
-    position: absolute;
-    top: calc($header-height + 1rem);
-    left: $sidebar-main-width;
-    width: 5vh;
-    height: 5vh;
-    background-color: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    z-index: 3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: left 0.3s ease;
+    flex-shrink: 0;
+    flex-direction: column;
+    width: 0;
+    height: calc(100vh - #{$header-height});
+    padding-top: 6vh;
+    overflow: hidden;
+    background-color: var(--color-secondary);
+    border-left: 1px solid #e5e7eb;
+    box-shadow: 0 0 10px rgb(0 0 0 / 15%);
+    transition: width 0.3s ease-in-out;
 
     &.open {
-      left: calc(#{$sidebar-main-width} + #{$sidebar-sub-width} - 5vh);
+        width: $sidebar-sub-width;
     }
 
-    svg {
-      transition: transform 0.3s ease;
+    &__item {
+        @apply px-4 py-2 cursor-pointer rounded-md hover:bg-gray-100;
+
+        font-size: 0.95rem;
+        color: #333;
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+
+        &:hover {
+            transform: translateX(2px);
+        }
     }
-  }
+
+    &__close {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        color: white;
+        cursor: pointer;
+        background-color: var(--color-primary);
+        border: none;
+        border-radius: 4px;
+    }
+
+    &__toggle {
+        position: absolute;
+        top: calc($header-height + 1rem);
+        left: $sidebar-main-width;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 5vh;
+        height: 5vh;
+        color: white;
+        cursor: pointer;
+        background-color: var(--color-primary);
+        border: none;
+        border-radius: 4px;
+        transition: left 0.3s ease;
+
+        &.open {
+            left: calc(#{$sidebar-main-width} + #{$sidebar-sub-width} - 5vh);
+        }
+
+        svg {
+            transition: transform 0.3s ease;
+        }
+    }
 }

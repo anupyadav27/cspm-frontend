@@ -1,13 +1,14 @@
 .preloader-wrapper {
-  @apply absolute bg-[var(--color-primary-overlay)] w-[100vw] h-[100vh]
+    @apply absolute bg-[var(--color-primary-overlay)] w-[100vw] h-[100vh]
   left-0 top-0 flex items-center justify-center;
-  z-index: 100;
 
-  position: relative;
+    position: relative;
+    z-index: 100;
 
-  .preloader-text {
-    @apply absolute;
-    color: var(--color-primary-dark);
-    font-size: 1.2rem;
-  }
+    .preloader-text {
+        @apply absolute;
+
+        font-size: 1.2rem;
+        color: var(--color-primary-dark);
+    }
 }

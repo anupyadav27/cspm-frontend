@@ -1,93 +1,44 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
-import Index from "@/components/tableGrid";
+import React, { useEffect, useState } from "react";
+import Layout from "@/components/layout";
+import { fetchData } from "@/utils/fetchData";
+import { useAppContext } from "@/context/appContext";
 
-const UsersTable = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Ayush Jha', email: 'ayush@example.com', role: 'Admin', active: true },
-    { id: 2, name: 'Riya Verma', email: 'riya@example.com', role: 'Editor', active: false },
-    { id: 3, name: 'Kunal Shah', email: 'kunal@example.com', role: 'Viewer', active: true },
-    { id: 4, name: 'Meena Patel', email: 'meena@example.com', role: 'Editor', active: true },
-    { id: 5, name: 'Arjun Singh', email: 'arjun@example.com', role: 'Admin', active: false },
-    { id: 6, name: 'Sneha Nair', email: 'sneha@example.com', role: 'Viewer', active: true },
-    { id: 7, name: 'Dev Mishra', email: 'dev@example.com', role: 'Editor', active: true },
-    { id: 8, name: 'Tanya Roy', email: 'tanya@example.com', role: 'Viewer', active: false },
-    { id: 9, name: 'Rohit Kumar', email: 'rohit@example.com', role: 'Editor', active: true },
-    { id: 10, name: 'Pooja Sharma', email: 'pooja@example.com', role: 'Viewer', active: true },
-  ]);
+export default function Test() {
+    const { state, dispatch } = useAppContext();
+    const [rawData, setRawData] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-  const handleEdit = (user) => {
-    alert(`Editing user: ${user.name}`);
-  };
+    const loadData = async (url = `${process.env.NEXT_PUBLIC_API_URL}/test/`, options = {}) => {
+        const { force = false, validate = true } = options;
+        try {
+            dispatch({ type: "SET_LOADING", payload: true });
+            const data = await fetchData(url, { force, validate });
+            setRawData(data?.data || []);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        } finally {
+            dispatch({ type: "SET_LOADING", payload: false });
+        }
+    };
 
-  const handleDelete = (user) => {
-    if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
-      setUsers((prev) => prev.filter((u) => u.id !== user.id));
-    }
-  };
+    useEffect(() => {
+        loadData();
+    }, []);
 
-  const handleToggleActive = (user) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, active: !u.active } : u))
+    return (
+        <Layout>
+            <div className="m-4">
+                <h1 className="text-4xl font-bold mb-4">Test Fetch Data</h1>
+                {loading ? (
+                    <p>Loading...</p>
+                ) : (
+                    <pre className="bg-gray-100 p-4 rounded overflow-auto">
+                        {JSON.stringify(rawData, null, 2)}
+                    </pre>
+                )}
+            </div>
+        </Layout>
     );
-  };
-
-  const columns = [
-    { key: 'id', title: 'ID', width: 60 },
-    { key: 'name', title: 'Name', searchable: true },
-    { key: 'email', title: 'Email', searchable: true },
-    {
-      key: 'role',
-      title: 'Role',
-      filterable: true,
-      filterOptions: [
-        { label: 'All', value: '' },
-        { label: 'Admin', value: 'Admin' },
-        { label: 'Editor', value: 'Editor' },
-        { label: 'Viewer', value: 'Viewer' },
-      ],
-    },
-    {
-      key: 'active',
-      title: 'Status',
-      render: (value, row) => (
-        <div className="rtg-cell">
-          <label className="rtg-toggle">
-            <input
-              type="checkbox"
-              checked={value}
-              onChange={() => handleToggleActive(row)}
-            />
-            <span className="rtg-toggle-slider"></span>
-          </label>
-          <span>{value ? 'Active' : 'Inactive'}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'actions',
-      title: 'Actions',
-      render: (value, row) => (
-        <div className="rtg-cell">
-          <button className="rtg__btn rtg__btn--edit" onClick={() => handleEdit(row)}>Edit</button>
-          <button className="rtg__btn rtg__btn--delete" onClick={() => handleDelete(row)}>Delete</button>
-        </div>
-      ),
-    },
-  ];
-
-  return (
-    <div style={{ width: '100%', height: '600px' }}>
-      <Index
-        columns={columns}
-        data={users}
-        paginationMode="client"
-        pageSizeOptions={[5, 10]}
-      />
-    </div>
-  );
-};
-
-export default UsersTable;
-
+}

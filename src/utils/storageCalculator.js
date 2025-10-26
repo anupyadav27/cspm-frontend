@@ -1,4 +1,4 @@
-(function() {
+(function () {
     function calculateStorage(storage) {
         let total = 0;
         for (let i = 0; i < storage.length; i++) {
@@ -10,9 +10,9 @@
     }
 
     function calculateCookies() {
-        const cookies = document.cookie.split(';');
+        const cookies = document.cookie.split(";");
         let total = 0;
-        cookies.forEach(cookie => {
+        cookies.forEach((cookie) => {
             total += cookie.length;
         });
         return total;
