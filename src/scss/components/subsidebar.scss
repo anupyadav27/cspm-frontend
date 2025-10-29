@@ -77,3 +77,10 @@ $header-height: 6vh;
         }
     }
 }
+
+.sub-sidebar__item.active {
+    background-color: var(--color-primary-light, #e0e7ff);
+    font-weight: 600;
+    color: var(--color-primary, #2563eb);
+}
+

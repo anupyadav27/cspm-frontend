@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/appContext";
 import { fetchData } from "@/utils/fetchData";
 import TableGrid from "@/components/tableGrid";
+import { FaTrashAlt, FaPenAlt } from "react-icons/fa";
+import Button from "@/components/button/index.jsx";
 
 export default function Vulnerabilities() {
     const { dispatch } = useAppContext();
@@ -148,12 +150,22 @@ export default function Vulnerabilities() {
             title: "Actions",
             render: (value, row) => (
                 <div className="rtg-cell">
-                    <button className="rtg__btn rtg__btn--edit" onClick={() => handleEdit(row)}>
-                        Edit
-                    </button>
-                    <button className="rtg__btn rtg__btn--delete" onClick={() => handleDelete(row)}>
-                        Delete
-                    </button>
+                    <Button
+                        onClick={() => handleEdit(row)}
+                        text={`Edit`}
+                        iconRight={<FaPenAlt />}
+                        small
+                        className={`m-2 !bg-blue-100 hover:!bg-blue-400 hover:!text-white !text-gray-800 !border-2 !border-blue-400`}
+                    />
+
+                    <Button
+                        onClick={() => handleDelete(row)}
+                        text={`Delete`}
+                        danger
+                        iconRight={<FaTrashAlt />}
+                        small
+                        className={`m-2 !bg-white hover:!bg-red-500 hover:!text-white !text-red-500 !border-2 !border-red-500`}
+                    />
                 </div>
             ),
         },
@@ -161,9 +173,6 @@ export default function Vulnerabilities() {
 
     return (
         <Layout>
-            <div className="w-auto h-20 flex items-center justify-center bg-white m-[3vh]">
-                <p className="font-medium text-5xl">Vulnerabilities</p>
-            </div>
             <TableGrid
                 columns={columns}
                 data={vulnerabilities}

@@ -10,6 +10,7 @@ export const initialState = {
     notifications: [],
     notificationSettings: null,
     isLoading: true,
+    isInitialized: false,
 };
 
 export function appReducer(state, action) {
@@ -105,6 +106,9 @@ export function appReducer(state, action) {
                 isLoading: !!action.payload,
             };
             break;
+
+        case "SET_INITIALIZED":
+            return { ...state, isInitialized: action.payload };
 
         default:
             return state;

@@ -21,8 +21,6 @@ export default function SecOps() {
             dispatch({ type: "SET_LOADING", payload: true });
             const result = await fetchData(url, { force, validate });
 
-            alert(JSON.stringify(result.logOut));
-
             if (result?.logOut) {
                 handleLogout();
                 return;

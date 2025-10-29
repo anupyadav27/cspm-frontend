@@ -146,10 +146,16 @@ const TableGrid = ({
                                             key={col.key}
                                             className={`rtg__th ${col.stick ? "rtg__th--sticky" : ""}`}
                                             style={{
-                                                "--col-min-width": col.width
-                                                    ? `${col.width}px`
-                                                    : "auto",
-                                                width: col.width || "auto",
+                                                minWidth: col.width ? `${col.width}px` : "auto",
+                                                maxWidth: col.maxWidth
+                                                    ? `${col.maxWidth}px`
+                                                    : "none",
+                                                whiteSpace: col.maxWidth ? "normal" : "nowrap",
+                                                overflowWrap: col.maxWidth
+                                                    ? "break-word"
+                                                    : "normal",
+                                                textOverflow: col.maxWidth ? "clip" : "ellipsis",
+                                                width: "fit-content",
                                                 ...stickyStyle,
                                             }}
                                             data-key={col.key}
@@ -226,7 +232,25 @@ const TableGrid = ({
                                                 <td
                                                     key={col.key}
                                                     className={`rtg__td ${col.stick ? "rtg__td--sticky" : ""}`}
-                                                    style={{ minWidth: col.width, ...stickyStyle }}
+                                                    style={{
+                                                        minWidth: col.width
+                                                            ? `${col.width}px`
+                                                            : "auto",
+                                                        maxWidth: col.maxWidth
+                                                            ? `${col.maxWidth}px`
+                                                            : "none",
+                                                        whiteSpace: col.maxWidth
+                                                            ? "normal"
+                                                            : "nowrap",
+                                                        overflowWrap: col.maxWidth
+                                                            ? "break-word"
+                                                            : "normal",
+                                                        textOverflow: col.maxWidth
+                                                            ? "clip"
+                                                            : "ellipsis",
+                                                        width: "fit-content",
+                                                        ...stickyStyle,
+                                                    }}
                                                 >
                                                     {col.render
                                                         ? col.render(row[col.key], row)

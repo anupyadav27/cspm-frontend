@@ -5,6 +5,8 @@ import Layout from "@/components/layout";
 import { useAppContext } from "@/context/appContext";
 import { fetchData } from "@/utils/fetchData";
 import TableGrid from "@/components/tableGrid";
+import Button from "@/components/button/index.jsx";
+import { FaPenAlt, FaTrashAlt } from "react-icons/fa";
 
 export default function Users() {
     const { state, dispatch } = useAppContext();
@@ -72,7 +74,6 @@ export default function Users() {
             title: "Role",
             filterable: true,
             filterOptions: [
-                { label: "All", value: "" },
                 { label: "Super Admin", value: "super_admin" },
                 {
                     label: "Admin",
@@ -113,7 +114,6 @@ export default function Users() {
             title: "SSO Provider",
             filterable: true,
             filterOptions: [
-                { label: "All", value: "" },
                 { label: "Okta", value: "okta" },
                 {
                     label: "None",
@@ -180,12 +180,22 @@ export default function Users() {
             width: 150,
             render: (value, row) => (
                 <div className="rtg-cell">
-                    <button className="rtg__btn rtg__btn--edit" onClick={() => handleEdit(row)}>
-                        Edit
-                    </button>
-                    <button className="rtg__btn rtg__btn--delete" onClick={() => handleDelete(row)}>
-                        Delete
-                    </button>
+                    <Button
+                        onClick={() => handleEdit(row)}
+                        text={`Edit`}
+                        iconRight={<FaPenAlt />}
+                        small
+                        className={`m-2 !bg-blue-100 hover:!bg-blue-400 hover:!text-white !text-gray-800 !border-2 !border-blue-400`}
+                    />
+
+                    <Button
+                        onClick={() => handleDelete(row)}
+                        text={`Delete`}
+                        danger
+                        iconRight={<FaTrashAlt />}
+                        small
+                        className={`m-2 !bg-white hover:!bg-red-500 hover:!text-white !text-red-500 !border-2 !border-red-500`}
+                    />
                 </div>
             ),
         },

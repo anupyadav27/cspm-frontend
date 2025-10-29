@@ -1,14 +1,16 @@
 "use client";
 
-import { FaChevronRight, FaChevronLeft } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { menuItems } from "@/data/components/menuItems";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function SubSideBar({ isOpen, activeItem, toggleSubSidebar }) {
     const pathname = usePathname();
+    const router = useRouter();
+
     const menu = activeItem || menuItems.find((item) => pathname.startsWith(item.link));
 
-    if (!menu) return null;
+    if (!menu || !menu.subMenu || menu.subMenu.length === 0) return null;
 
     return (
         <>
@@ -20,9 +22,13 @@ export default function SubSideBar({ isOpen, activeItem, toggleSubSidebar }) {
             </button>
 
             <aside className={`sub-sidebar ${isOpen ? "open" : ""}`}>
-                {menu.subMenu?.map((sub, idx) => (
-                    <div key={idx} className="sub-sidebar__item">
-                        {sub}
+                {menu.subMenu.map((sub, idx) => (
+                    <div
+                        key={idx}
+                        className={`sub-sidebar__item ${pathname === sub.route ? "active" : ""}`}
+                        onClick={() => router.push(sub.route)}
+                    >
+                        {sub.label}
                     </div>
                 ))}
             </aside>
