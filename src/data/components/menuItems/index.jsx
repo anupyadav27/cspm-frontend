@@ -101,26 +101,14 @@ export const menuItems = [
         ],
     },
     {
-        id: "users",
-        label: "Users",
-        icon: <FaUsers />,
-        link: "/users",
-        subMenu: [], // no submenu, hides sub-sidebar
-    },
-    {
-        id: "tenants",
-        label: "Tenants",
-        icon: <FaBuilding />,
-        link: "/tenants",
-        subMenu: [], // no submenu, hides sub-sidebar
-    },
-    {
         id: "settings",
         label: "Settings",
         icon: <FaCog />,
         link: "/settings",
         subMenu: [
             { label: "Profile", route: "/settings/profile" },
+            { label: "Users", route: "/settings/users" },
+            { label: "Tenants", route: "/settings/tenants" },
             { label: "Notifications", route: "/settings/notifications" },
             { label: "Integrations", route: "/settings/integrations" },
         ],

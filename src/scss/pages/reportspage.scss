@@ -1,0 +1,19 @@
+.reports-main-container {
+    display: flex;
+    margin: 1vh;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.report__container-exportbtn {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}

@@ -22,7 +22,7 @@ export default function Vulnerabilities() {
             const data = await fetchData(url, { force, validate });
             setVulnerabilities(data?.data || []);
         } catch (error) {
-            console.error("Error fetching vulnerabilities:", error);
+            console.info("Error fetching vulnerabilities:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Layout from "@/components/layout";
-import { useAppContext } from "@/context/appContext";
-import { fetchData } from "@/utils/fetchData";
-import TableGrid from "@/components/tableGrid";
+import Layout from "@/components/layout/index.jsx";
+import { useAppContext } from "@/context/appContext/index.jsx";
+import { fetchData } from "@/utils/fetchData/index.jsx";
+import TableGrid from "@/components/tableGrid/index.jsx";
 import Button from "@/components/button/index.jsx";
 import { FaPenAlt, FaTrashAlt } from "react-icons/fa";
 
@@ -22,7 +22,7 @@ export default function Users() {
             const data = await fetchData(url, { force, validate });
             setUsers(data?.data || []);
         } catch (error) {
-            console.error("Error fetching users:", error);
+            console.info("Error fetching users:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
@@ -202,7 +202,7 @@ export default function Users() {
     ];
 
     return (
-        <Layout>
+        <Layout headerLabel={`Users`}>
             <TableGrid
                 columns={columns}
                 data={users}

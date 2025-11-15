@@ -20,7 +20,7 @@ export const fetchData = async (url, { force = false, validate = false } = {}) =
         let res = await doFetch();
 
         if (res.status === 401) {
-            console.warn("Access token expired, attempting refresh...");
+            console.info("Access token expired, attempting refresh...");
 
             const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
                 method: "POST",
@@ -32,19 +32,32 @@ export const fetchData = async (url, { force = false, validate = false } = {}) =
                 console.info("Access token refreshed, retrying original request...");
                 res = await doFetch();
             } else {
-                console.error("Refresh failed — logging out");
-                return { data: null, pagination: null, logOut: true };
+                console.info("Refresh failed — logging out");
+                return {
+                    data: null,
+                    pagination: null,
+                    logOut: true,
+                    error: "Token refresh failed",
+                };
             }
         }
 
         if (res.status === 401) {
-            console.error("Still unauthorized after refresh — logging out");
-            return { data: null, pagination: null, logOut: true };
+            console.info("Still unauthorized after refresh — logging out");
+            return { data: null, pagination: null, logOut: true, error: "Unauthorized" };
         }
 
-        if (!force && validate && res.status === 304) {
-            console.info("Data not modified (304) — using browser cache");
-            return { data: null, pagination: null, fromCache: true };
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.info(`Fetch failed (${res.status}):`, errorText);
+            return {
+                data: null,
+                pagination: null,
+                fromCache: false,
+                logOut: false,
+                error: `Request failed with status ${res.status}`,
+                status: res.status,
+            };
         }
 
         const data = await res.json();
@@ -54,9 +67,17 @@ export const fetchData = async (url, { force = false, validate = false } = {}) =
             pagination: data?.pagination || {},
             fromCache: false,
             logOut: false,
+            error: null,
+            status: res.status,
         };
     } catch (e) {
-        console.error("Failed to fetch data:", e);
-        return { data: null, pagination: null, logOut: false };
+        console.info("Failed to fetch data:", e);
+        return {
+            data: null,
+            pagination: null,
+            logOut: false,
+            error: e.message || "Unknown error",
+            status: null,
+        };
     }
 };

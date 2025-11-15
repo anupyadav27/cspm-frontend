@@ -30,7 +30,7 @@ export const AppProvider = ({ children }) => {
             try {
                 sessionStorage.setItem("appState", JSON.stringify(state));
             } catch (err) {
-                console.error("Failed to persist app state:", err);
+                console.info("Failed to persist app state:", err);
             }
         }
     }, [state]);
@@ -72,13 +72,14 @@ export const AppProvider = ({ children }) => {
                             user = data.user;
                             isAuthenticated = true;
                         }
+                        dispatch({ type: "SET_INITIALIZED", payload: true });
                     } else {
                         dispatch({ type: "SET_INITIALIZED", payload: true });
                         setLoading(false);
                         return;
                     }
                 } catch (err) {
-                    console.warn("Session refresh failed:", err.message);
+                    console.info("Session refresh failed:", err.message);
                     dispatch({ type: "SET_INITIALIZED", payload: true });
                     setLoading(false);
                     return;
@@ -94,14 +95,17 @@ export const AppProvider = ({ children }) => {
                     }
                 );
 
+                if (tenantData.error || tenantData.status !== 200 || tenantData.status !== 304) {
+                    console.info("Error fetching tenants:", tenantData.error);
+                    dispatch({ type: "SET_INITIALIZED", payload: false });
+                }
+
                 if (tenantData.logOut) {
                     handleLogout(dispatch);
                 }
 
-                if (!tenantData?.data?.length) throw new Error("No tenants found");
-
                 dispatch({ type: "SET_TENANTS", payload: tenantData });
-                dispatch({ type: "SELECT_TENANT", payload: tenantData.data[0] });
+                dispatch({ type: "SELECT_TENANT", payload: tenantData?.data[0] });
 
                 dispatch({
                     type: "SET_NOTIFICATIONS",
@@ -112,10 +116,8 @@ export const AppProvider = ({ children }) => {
                     payload: notificationsData.notificationSettings || {},
                 });
             }
-
-            dispatch({ type: "SET_INITIALIZED", payload: true });
         } catch (err) {
-            console.error("App initialization failed:", err);
+            console.info("App initialization failed:", err);
             dispatch({ type: "SET_INITIALIZED", payload: false });
         } finally {
             setLoading(false);
@@ -131,14 +133,14 @@ export const AppProvider = ({ children }) => {
             const maxRetries = 5;
             if (retryCount < maxRetries) {
                 const retryDelay = 5000;
-                console.warn(`Retrying initialization... Attempt ${retryCount + 1}`);
+                console.info(`Retrying initialization... Attempt ${retryCount + 1}`);
                 const timer = setTimeout(() => {
                     setRetryCount((prev) => prev + 1);
                     initializeApp();
                 }, retryDelay);
                 return () => clearTimeout(timer);
             } else {
-                console.error("Max retries reached. Initialization failed permanently.");
+                console.info("Max retries reached. Initialization failed permanently.");
             }
         }
     }, [state.isInitialized, loading, retryCount, state.isAuthenticated]);

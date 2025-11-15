@@ -99,7 +99,7 @@
 }
 
 .progress-loader {
-    @apply relative w-full h-3 bg-white rounded-md overflow-hidden;
+    @apply relative w-full h-3 bg-gray-100 rounded-md overflow-hidden;
 
     &__bar {
         @apply h-full transition-all duration-300 ease-in-out;

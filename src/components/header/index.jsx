@@ -137,8 +137,8 @@ export default function Header({ title }) {
                             }}
                         >
                             <div className="header__avatar">
-                                {currentUser?.name?.first?.[0]?.toUpperCase()}
-                                {currentUser?.name?.last?.[0]?.toUpperCase()}
+                                {currentUser?.name?.split(" ")[0][0]}
+                                {currentUser?.name?.split(" ")[1][0]}
                             </div>
                         </button>
 

@@ -24,8 +24,8 @@ $header-height: 6vh;
     &__content {
         position: relative;
         flex: 1;
-        padding: 1rem;
         overflow-y: auto;
+        overflow-x: hidden;
         color: var(--color-primary);
         background: var(--color-secondary-dark);
     }

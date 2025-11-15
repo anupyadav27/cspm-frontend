@@ -17,7 +17,7 @@ export default function Test() {
             const data = await fetchData(url, { force, validate });
             setRawData(data?.data || []);
         } catch (error) {
-            console.error("Error fetching users:", error);
+            console.info("Error fetching users:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }

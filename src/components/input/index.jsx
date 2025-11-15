@@ -5,6 +5,7 @@ const Input = ({
     placeholder = "",
     value,
     onChange,
+    onBlur,
     disabled = false,
     className = "",
     small = false,
@@ -32,6 +33,7 @@ const Input = ({
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
+                onBlur={onBlur}
                 disabled={disabled}
                 name={name}
                 className="input-field"

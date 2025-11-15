@@ -18,8 +18,9 @@ export default function Policies() {
     const [filterValues, setFilterValues] = useState({});
     const [paginationData, setPaginationData] = useState(null);
 
-    const loadPolicies = async () => {
+    const loadPolicies = async (options = {}) => {
         try {
+            const { force = false, validate = false } = options;
             dispatch({ type: "SET_LOADING", payload: true });
 
             const queryParams = new URLSearchParams();
@@ -29,7 +30,10 @@ export default function Policies() {
 
             for (const [key, value] of Object.entries(searchFilters)) {
                 if (value && value.trim() !== "") {
-                    const searchKey = key === "tenantId" ? "tenantId__name" : key;
+                    let searchKey = key;
+                    if (key === "tenantId") {
+                        searchKey = "tenantId__name";
+                    }
                     queryParams.append(`${searchKey}_search`, value.trim());
                 }
             }
@@ -41,28 +45,24 @@ export default function Policies() {
             }
 
             const url = `${process.env.NEXT_PUBLIC_API_URL}/api/policies?${queryParams.toString()}`;
-            const result = await fetchData(url);
+            const result = await fetchData(url, { force, validate });
 
             if (result?.logOut) {
-                handleLogout();
+                handleLogout(dispatch);
                 return;
             }
 
-            if (result?.data) {
-                setPolicies(result.data);
-            }
-            if (result?.pagination) {
-                setPaginationData(result.pagination);
-            }
+            setPolicies(result?.data || []);
+            setPaginationData(result?.pagination || null);
         } catch (error) {
-            console.error("Error fetching Policies:", error);
+            console.info("Error fetching Policies:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
     };
 
     useEffect(() => {
-        loadPolicies();
+        loadPolicies({ force: false, validate: true });
     }, [page, pageSize, searchFilters, filterValues]);
 
     const handleColumnSearch = ({ key, value }) => {
@@ -81,12 +81,6 @@ export default function Policies() {
             render: (value) => value?.slice(-6),
         },
         {
-            key: "tenantId",
-            title: "Tenant",
-            width: 180,
-            render: (value) => value?.name || "-",
-        },
-        {
             key: "name",
             title: "Name",
             searchable: true,
@@ -96,6 +90,7 @@ export default function Policies() {
             key: "description",
             title: "Description",
             width: 300,
+            searchable: true,
             render: (value) => (value?.length > 60 ? value.slice(0, 60) + "..." : value),
         },
         {
@@ -104,9 +99,11 @@ export default function Policies() {
             width: 140,
             filterable: true,
             filterOptions: [
-                { label: "All", value: "" },
+                { label: "IAM", value: "IAM" },
+                { label: "SCP", value: "SCP" },
+                { label: "SecurityHub", value: "SecurityHub" },
+                { label: "ConfigRule", value: "ConfigRule" },
                 { label: "Custom", value: "Custom" },
-                { label: "System", value: "System" },
             ],
         },
         {
@@ -131,9 +128,9 @@ export default function Policies() {
             width: 160,
             filterable: true,
             filterOptions: [
-                { label: "All", value: "" },
                 { label: "Valid", value: "valid" },
-                { label: "Invalid", value: "invalid" },
+                { label: "Warning", value: "warning" },
+                { label: "Error", value: "error" },
                 { label: "Unknown", value: "unknown" },
             ],
             render: (value) => (
@@ -146,7 +143,7 @@ export default function Policies() {
                         textTransform: "capitalize",
                     }}
                 >
-                    {value}
+                    {value || "unknown"}
                 </span>
             ),
         },
@@ -156,7 +153,6 @@ export default function Policies() {
             width: 160,
             filterable: true,
             filterOptions: [
-                { label: "All", value: "" },
                 { label: "Compliant", value: "compliant" },
                 { label: "Non-Compliant", value: "non_compliant" },
                 { label: "Unknown", value: "unknown" },
@@ -174,7 +170,7 @@ export default function Policies() {
                         textTransform: "capitalize",
                     }}
                 >
-                    {value.replace("_", " ")}
+                    {value?.replace("_", " ") || "Unknown"}
                 </span>
             ),
         },
@@ -182,6 +178,13 @@ export default function Policies() {
             key: "enforcedBy",
             title: "Enforced By",
             width: 140,
+            filterable: true,
+            filterOptions: [
+                { label: "IAM", value: "IAM" },
+                { label: "Config", value: "Config" },
+                { label: "SecurityHub", value: "SecurityHub" },
+                { label: "Manual", value: "Manual" },
+            ],
         },
         {
             key: "enforcementStatus",
@@ -189,9 +192,9 @@ export default function Policies() {
             width: 160,
             filterable: true,
             filterOptions: [
-                { label: "All", value: "" },
                 { label: "Enforced", value: "enforced" },
                 { label: "Not Enforced", value: "not_enforced" },
+                { label: "Partially Enforced", value: "partially_enforced" },
             ],
             render: (value) => (
                 <span
@@ -201,7 +204,7 @@ export default function Policies() {
                         textTransform: "capitalize",
                     }}
                 >
-                    {value.replace("_", " ")}
+                    {value?.replace("_", " ") || "Not Enforced"}
                 </span>
             ),
         },

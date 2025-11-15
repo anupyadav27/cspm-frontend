@@ -3,7 +3,7 @@
 import Sidebar from "@/components/sideBar";
 import Header from "@/components/header";
 import SubSideBar from "@/components/subSideBar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { menuItems } from "@/data/components/menuItems";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/context/appContext";
@@ -13,55 +13,80 @@ export default function Layout({ children, headerLabel, isLoading = false }) {
     const { state, dispatch } = useAppContext();
     const appLoading = state.isLoading;
     const [isClient, setIsClient] = useState(false);
-
     const [activeItem, setActiveItem] = useState(null);
-    const [isSubSidebarOpen, setIsSubSidebarOpen] = useState(false);
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const [isMouseOverSubSidebar, setIsMouseOverSubSidebar] = useState(false);
+
+    const hideTimeoutRef = useRef(null);
+
     const pathname = usePathname();
     const router = useRouter();
 
-    let matchedItem;
-
     useEffect(() => {
         setIsClient(true);
+        return () => {
+            if (hideTimeoutRef.current) {
+                clearTimeout(hideTimeoutRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
-        matchedItem = menuItems.find((item) => pathname.startsWith(item.link));
-        if (matchedItem) {
-            setActiveItem(matchedItem);
-        } else {
-            setActiveItem(null);
-        }
+        const matched = menuItems.find((item) => pathname.startsWith(item.link));
+        setActiveItem(matched || null);
     }, [pathname]);
 
     const handleSidebarClick = (item) => {
-        if (activeItem?.id === item.id) {
-            setIsSubSidebarOpen((prev) => !prev);
-        } else {
-            dispatch({ type: "SET_LOADING", payload: true });
-            setActiveItem(item);
-            router.push(item.link);
-        }
+        dispatch({ type: "SET_LOADING", payload: true });
+        setActiveItem(item);
+        router.push(item.link);
     };
 
-    const toggleSubSidebar = () => {
-        setIsSubSidebarOpen((prev) => !prev);
+    const isSubSidebarVisible = hoveredItem?.subMenu?.length > 0;
+
+    const scheduleHide = () => {
+        if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+        }
+        hideTimeoutRef.current = setTimeout(() => {
+            setHoveredItem(null);
+            setIsMouseOverSubSidebar(false);
+        }, 200);
+    };
+
+    const cancelHide = () => {
+        if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+            hideTimeoutRef.current = null;
+        }
     };
 
     return (
         <div className="layout">
-            <Sidebar activeItem={activeItem} onItemClick={handleSidebarClick} />
+            <Sidebar
+                activeItem={activeItem}
+                onItemClick={handleSidebarClick}
+                onItemHover={(item) => {
+                    cancelHide();
+                    setHoveredItem(item);
+                }}
+                onItemLeave={scheduleHide}
+            />
 
             <div className="layout__main">
                 <Header title={headerLabel || activeItem?.label} />
-
-                <div className="layout__body">
+                <div>
                     <SubSideBar
-                        isOpen={isSubSidebarOpen}
-                        activeItem={activeItem}
-                        toggleSubSidebar={toggleSubSidebar}
+                        isVisible={isSubSidebarVisible}
+                        menuItem={hoveredItem}
+                        onMouseEnter={() => {
+                            cancelHide();
+                            setIsMouseOverSubSidebar(true);
+                        }}
+                        onMouseLeave={scheduleHide}
                     />
-
+                </div>
+                <div className="layout__body">
                     <div className="layout__content">
                         {isClient && <SpinnerLoaderOverlay isLoading={appLoading || isLoading} />}
                         {children}

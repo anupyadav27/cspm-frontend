@@ -26,7 +26,7 @@ const handleLogout = async (dispatch) => {
             window.location.href = "/auth/login";
         }
     } catch (error) {
-        console.error("Logout error:", error);
+        console.info("Logout error:", error);
 
         await clearClientData();
         if (dispatch) dispatch({ type: "LOGOUT" });

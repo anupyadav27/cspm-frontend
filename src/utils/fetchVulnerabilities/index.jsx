@@ -34,7 +34,7 @@ export const fetchVulnerabilities = async (
 
         return vulnerabilityData;
     } catch (e) {
-        console.error(`Failed to fetch vulnerabilities:`, e);
+        console.info(`Failed to fetch vulnerabilities:`, e);
         alert(`Failed to fetch vulnerabilities: ${e.message}`);
         return null;
     } finally {

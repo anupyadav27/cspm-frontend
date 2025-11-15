@@ -3,14 +3,14 @@ $sidebar-sub-width: 12rem;
 $header-height: 6vh;
 
 .sub-sidebar {
-    position: relative;
-    z-index: 2;
+    position: absolute;
+    z-index: 15;
     display: flex;
     flex-shrink: 0;
     flex-direction: column;
     width: 0;
     height: calc(100vh - #{$header-height});
-    padding-top: 6vh;
+    padding-top: 3vh;
     overflow: hidden;
     background-color: var(--color-secondary);
     border-left: 1px solid #e5e7eb;
@@ -19,6 +19,17 @@ $header-height: 6vh;
 
     &.open {
         width: $sidebar-sub-width;
+    }
+
+    &__title {
+        @apply px-4;
+
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--color-primary);
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
     }
 
     &__item {
@@ -83,4 +94,3 @@ $header-height: 6vh;
     font-weight: 600;
     color: var(--color-primary, #2563eb);
 }
-

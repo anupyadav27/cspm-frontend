@@ -7,20 +7,47 @@ import { fetchData } from "@/utils/fetchData";
 import TableGrid from "@/components/tableGrid";
 
 export default function Compliances() {
-    const { state, dispatch } = useAppContext();
-    const [compliances, setCompliances] = useState([]);
+    const { dispatch } = useAppContext();
 
-    const loadCompliances = async (
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/compliances`,
-        options = {}
-    ) => {
-        const { force = false, validate = false } = options;
+    const [compliances, setCompliances] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [searchFilters, setSearchFilters] = useState({});
+    const [filterValues, setFilterValues] = useState({});
+    const [paginationData, setPaginationData] = useState(null);
+
+    const loadCompliances = async () => {
         try {
             dispatch({ type: "SET_LOADING", payload: true });
-            const res = await fetchData(url, { force, validate });
-            setCompliances(res?.data || []);
+
+            const queryParams = new URLSearchParams();
+
+            queryParams.append("page", page);
+            queryParams.append("pageSize", pageSize);
+
+            for (const [key, value] of Object.entries(searchFilters)) {
+                if (value?.trim()) {
+                    queryParams.append(`${key}_search`, value.trim());
+                }
+            }
+
+            for (const [key, value] of Object.entries(filterValues)) {
+                if (value) {
+                    queryParams.append(key, value);
+                }
+            }
+
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/compliances?${queryParams.toString()}`;
+            const result = await fetchData(url);
+
+            if (result?.data) {
+                setCompliances(result.data);
+            }
+            if (result?.pagination) {
+                setPaginationData(result.pagination);
+            }
         } catch (error) {
-            console.error("Error fetching compliances:", error);
+            console.info("Error fetching compliances:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
@@ -28,7 +55,15 @@ export default function Compliances() {
 
     useEffect(() => {
         loadCompliances();
-    }, []);
+    }, [page, pageSize, searchFilters, filterValues]);
+
+    const handleColumnSearch = ({ key, value }) => {
+        setSearchFilters((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const handleFilterChange = ({ key, value }) => {
+        setFilterValues((prev) => ({ ...prev, [key]: value }));
+    };
 
     const handleView = (row) => {
         alert(`Viewing control ${row.controlId} (${row.framework})`);
@@ -45,14 +80,8 @@ export default function Compliances() {
             key: "_id",
             title: "ID",
             width: 70,
-            render: (value) => value?.slice(-6),
-        },
-        {
-            key: "tenantId",
-            title: "Tenant",
-            searchable: true,
-            width: 200,
-            render: (value) => value?.name || "-",
+            stick: true,
+            render: (value) => value?.slice(-6) || "-",
         },
         {
             key: "framework",
@@ -66,6 +95,7 @@ export default function Compliances() {
                 { label: "HIPAA", value: "HIPAA" },
                 { label: "SOC2", value: "SOC2" },
                 { label: "PCI-DSS", value: "PCI-DSS" },
+                { label: "Custom", value: "Custom" },
             ],
             render: (value) => (
                 <span
@@ -104,26 +134,29 @@ export default function Compliances() {
                 { label: "All", value: "" },
                 { label: "Compliant", value: "compliant" },
                 { label: "Non-Compliant", value: "non_compliant" },
+                { label: "Not Applicable", value: "not_applicable" },
                 { label: "Unknown", value: "unknown" },
             ],
             render: (value) => {
-                const colors = {
-                    compliant: { color: "#22c55e", bg: "#dcfce7" },
-                    non_compliant: { color: "#ef4444", bg: "#fee2e2" },
-                    unknown: { color: "#9ca3af", bg: "#f3f4f6" },
-                };
-                const c = colors[value] || { color: "#333", bg: "#f4f4f4" };
+                const config = {
+                    compliant: { text: "Compliant", color: "#22c55e", bg: "#dcfce7" },
+                    non_compliant: { text: "Non-Compliant", color: "#ef4444", bg: "#fee2e2" },
+                    not_applicable: { text: "N/A", color: "#6b7280", bg: "#f3f4f6" },
+                    unknown: { text: "Unknown", color: "#9ca3af", bg: "#f3f4f6" },
+                }[value] || { text: "-", color: "#333", bg: "#f4f4f4" };
+
                 return (
                     <span
                         style={{
-                            backgroundColor: c.bg,
-                            color: c.color,
+                            backgroundColor: config.bg,
+                            color: config.color,
                             padding: "3px 6px",
                             borderRadius: "6px",
                             fontWeight: 600,
+                            fontSize: "12px",
                         }}
                     >
-                        {value?.replace("_", " ")?.toUpperCase() || "-"}
+                        {config.text}
                     </span>
                 );
             },
@@ -141,20 +174,16 @@ export default function Compliances() {
                 { label: "Critical", value: "critical" },
             ],
             render: (value) => {
-                const colors = {
+                const colorMap = {
                     low: "#16a34a",
                     medium: "#f59e0b",
                     high: "#dc2626",
                     critical: "#991b1b",
                 };
+                const display = value ? value.charAt(0).toUpperCase() + value.slice(1) : "-";
                 return (
-                    <span
-                        style={{
-                            color: colors[value] || "#444",
-                            fontWeight: 600,
-                        }}
-                    >
-                        {value?.charAt(0).toUpperCase() + value?.slice(1)}
+                    <span style={{ color: colorMap[value] || "#444", fontWeight: 600 }}>
+                        {display}
                     </span>
                 );
             },
@@ -165,27 +194,31 @@ export default function Compliances() {
             width: 170,
             render: (value) => {
                 if (!value) return "-";
-                const date = new Date(value);
-                return date.toLocaleString(undefined, {
+                return new Date(value).toLocaleString(undefined, {
                     year: "numeric",
                     month: "short",
                     day: "2-digit",
                     hour: "2-digit",
                     minute: "2-digit",
-                    hour12: true,
                 });
             },
         },
         {
             key: "actions",
             title: "Actions",
-            width: 150,
+            width: 140,
             render: (value, row) => (
-                <div className="rtg-cell">
-                    <button className="rtg__btn rtg__btn--edit" onClick={() => handleView(row)}>
+                <div className="rtg-cell flex gap-1">
+                    <button
+                        className="rtg__btn rtg__btn--edit text-xs px-2 py-1"
+                        onClick={() => handleView(row)}
+                    >
                         View
                     </button>
-                    <button className="rtg__btn rtg__btn--delete" onClick={() => handleDelete(row)}>
+                    <button
+                        className="rtg__btn rtg__btn--delete text-xs px-2 py-1"
+                        onClick={() => handleDelete(row)}
+                    >
                         Delete
                     </button>
                 </div>
@@ -198,10 +231,18 @@ export default function Compliances() {
             <TableGrid
                 columns={columns}
                 data={compliances}
-                paginationMode="client"
-                pageSizeOptions={[5, 10, 20]}
-                maxHeight="70vh"
+                paginationMode="server"
+                controlledPage={page}
+                controlledPageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                totalCount={paginationData?.total}
+                onSearch={handleColumnSearch}
+                onFilter={handleFilterChange}
+                pageSizeOptions={[5, 10, 20, 50]}
+                maxHeight="65vh"
                 maxWidth="100%"
+                renderNoData={() => "No compliance controls found"}
             />
         </Layout>
     );

@@ -1,5 +1,6 @@
 import { useAppContext } from "@/context/appContext";
 import usersData from "@/data/samples/users.json";
+import { clearClientData } from "@/utils/clearClientData/index.jsx";
 
 export const useAuthActions = () => {
     const { state, dispatch } = useAppContext();
@@ -44,22 +45,9 @@ export const useAuthActions = () => {
 
             const data = await res.json();
 
-            alert(JSON.stringify(data));
-
-            sessionStorage.clear();
-
-            if ("caches" in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map((name) => caches.delete(name)));
-            }
+            await clearClientData();
 
             dispatch({ type: "LOGOUT" });
-
-            document.cookie.split(";").forEach((cookie) => {
-                const name = cookie.split("=")[0].trim();
-                document.cookie = `${name}=; Max-Age=0; path=/;`;
-                document.cookie = `${name}=; Max-Age=0; path=/; domain=${window.location.hostname}`;
-            });
 
             const currentPath = window.location.pathname;
 
@@ -72,7 +60,7 @@ export const useAuthActions = () => {
                 window.location.href = "/auth/login";
             }
         } catch (error) {
-            console.error("Logout error:", error);
+            console.info("Logout error:", error);
 
             sessionStorage.clear();
             if ("caches" in window) {

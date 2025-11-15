@@ -20,7 +20,7 @@ export default function Threats() {
             const data = await fetchData(url, { force, validate });
             setThreats(data?.data || []);
         } catch (error) {
-            console.error("Error fetching threats:", error);
+            console.info("Error fetching threats:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }

@@ -9,48 +9,81 @@ import { useAuthActions } from "@/context/appContext/useAuthActions/index.jsx";
 
 export default function SecOps() {
     const { state, dispatch } = useAppContext();
-    const [secops, setSecops] = useState([]);
     const { handleLogout } = useAuthActions();
 
-    const loadSecOps = async (
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/secops`,
-        options = {}
-    ) => {
+    const [secops, setSecops] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [searchFilters, setSearchFilters] = useState({});
+    const [filterValues, setFilterValues] = useState({});
+    const [paginationData, setPaginationData] = useState(null);
+
+    const loadSecOps = async (options = {}) => {
         const { force = false, validate = false } = options;
         try {
             dispatch({ type: "SET_LOADING", payload: true });
+
+            const queryParams = new URLSearchParams();
+
+            queryParams.append("page", page);
+            queryParams.append("pageSize", pageSize);
+
+            for (const [key, value] of Object.entries(searchFilters)) {
+                if (value?.trim()) {
+                    queryParams.append(`${key}_search`, value.trim());
+                }
+            }
+
+            for (const [key, value] of Object.entries(filterValues)) {
+                if (value) {
+                    queryParams.append(key, value);
+                }
+            }
+
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/secops?${queryParams.toString()}`;
             const result = await fetchData(url, { force, validate });
 
             if (result?.logOut) {
-                handleLogout();
+                handleLogout(dispatch);
                 return;
             }
 
             if (result?.data) {
                 setSecops(result.data);
             }
+            if (result?.pagination) {
+                setPaginationData(result.pagination);
+            }
         } catch (error) {
-            console.error("Error fetching SecOps:", error);
+            console.info("Error fetching SecOps:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
     };
 
     useEffect(() => {
-        loadSecOps();
-    }, []);
+        loadSecOps({ validate: true });
+    }, [page, pageSize, searchFilters, filterValues]);
+
+    const handleColumnSearch = ({ key, value }) => {
+        setSearchFilters((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const handleFilterChange = ({ key, value }) => {
+        setFilterValues((prev) => ({ ...prev, [key]: value }));
+    };
 
     const columns = [
         {
             key: "_id",
             title: "ID",
             width: 90,
-            render: (value) => value?.slice(-6),
+            stick: true,
+            render: (value) => value?.slice(-6) || "-",
         },
         {
             key: "tenantId",
             title: "Tenant",
-            searchable: true,
             width: 180,
             render: (value) => value?.name || "-",
         },
@@ -63,32 +96,44 @@ export default function SecOps() {
         {
             key: "repository",
             title: "Repository",
-            width: 300,
+            searchable: true,
+            width: 220,
         },
         {
             key: "branch",
             title: "Branch",
+            searchable: true,
             width: 120,
         },
         {
             key: "commitId",
             title: "Commit ID",
-            width: 100,
+            searchable: true,
+            width: 120,
         },
         {
             key: "tool",
             title: "Tool",
             width: 120,
+            filterable: true,
+            filterOptions: [
+                { label: "All", value: "" },
+                { label: "SonarQube", value: "SonarQube" },
+                { label: "Snyk", value: "Snyk" },
+                { label: "Checkmarx", value: "Checkmarx" },
+            ],
         },
         {
             key: "ruleName",
             title: "Rule Name",
-            width: 300,
+            searchable: true,
+            width: 250,
         },
         {
             key: "severity",
             title: "Severity",
             filterable: true,
+            width: 130,
             filterOptions: [
                 { label: "All", value: "" },
                 { label: "Critical", value: "critical" },
@@ -96,16 +141,14 @@ export default function SecOps() {
                 { label: "Medium", value: "medium" },
                 { label: "Low", value: "low" },
             ],
-            width: 130,
             render: (value) => {
-                const color =
-                    value === "critical"
-                        ? "#dc2626"
-                        : value === "high"
-                          ? "#f97316"
-                          : value === "medium"
-                            ? "#eab308"
-                            : "#22c55e";
+                const colorMap = {
+                    critical: "#dc2626",
+                    high: "#f97316",
+                    medium: "#eab308",
+                    low: "#22c55e",
+                };
+                const color = colorMap[value] || "#6b7280";
                 return (
                     <span
                         style={{
@@ -117,7 +160,7 @@ export default function SecOps() {
                             textTransform: "capitalize",
                         }}
                     >
-                        {value}
+                        {value || "-"}
                     </span>
                 );
             },
@@ -126,12 +169,12 @@ export default function SecOps() {
             key: "status",
             title: "Status",
             filterable: true,
+            width: 130,
             filterOptions: [
                 { label: "All", value: "" },
                 { label: "Open", value: "open" },
                 { label: "Resolved", value: "resolved" },
             ],
-            width: 130,
             render: (value) => (
                 <span
                     style={{
@@ -140,7 +183,7 @@ export default function SecOps() {
                         textTransform: "capitalize",
                     }}
                 >
-                    {value}
+                    {value || "-"}
                 </span>
             ),
         },
@@ -165,19 +208,20 @@ export default function SecOps() {
                         textTransform: "capitalize",
                     }}
                 >
-                    {value}
+                    {value || "-"}
                 </span>
             ),
         },
         {
             key: "owner",
             title: "Owner",
-            filterable: true,
+            searchable: true,
             width: 140,
         },
         {
             key: "filePath",
             title: "File Path",
+            searchable: true,
             width: 220,
         },
         {
@@ -188,22 +232,14 @@ export default function SecOps() {
         {
             key: "introducedAt",
             title: "Introduced At",
-            width: 180,
-            render: (value) => {
-                if (!value) return "-";
-                const date = new Date(value);
-                return date.toLocaleString();
-            },
+            width: 170,
+            render: (value) => (value ? new Date(value).toLocaleString() : "-"),
         },
         {
             key: "fixedAt",
             title: "Fixed At",
-            width: 180,
-            render: (value) => {
-                if (!value) return "-";
-                const date = new Date(value);
-                return date.toLocaleString();
-            },
+            width: 170,
+            render: (value) => (value ? new Date(value).toLocaleString() : "-"),
         },
     ];
 
@@ -212,10 +248,18 @@ export default function SecOps() {
             <TableGrid
                 columns={columns}
                 data={secops}
-                paginationMode="client"
-                pageSizeOptions={[5, 10, 20]}
+                paginationMode="server"
+                controlledPage={page}
+                controlledPageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                totalCount={paginationData?.total}
+                onSearch={handleColumnSearch}
+                onFilter={handleFilterChange}
+                pageSizeOptions={[5, 10, 20, 50]}
                 maxHeight="60vh"
                 maxWidth="100%"
+                renderNoData={() => "No SecOps issues found"}
             />
         </Layout>
     );

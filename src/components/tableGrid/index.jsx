@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 const TableGrid = ({
     columns,
@@ -13,6 +14,7 @@ const TableGrid = ({
     onPageSizeChange,
     onSearch,
     onFilter,
+    onSort,
     renderNoData,
     className,
     maxHeight,
@@ -24,6 +26,7 @@ const TableGrid = ({
     const [pageInput, setPageInput] = useState("");
     const [columnSearch, setColumnSearch] = useState({});
     const [columnFilter, setColumnFilter] = useState({});
+    const [sortConfig, setSortConfig] = useState({});
 
     const page = controlledPage ?? internalPage;
     const pageSize = controlledPageSize ?? internalPageSize;
@@ -73,6 +76,49 @@ const TableGrid = ({
         if (onFilter) onFilter({ key: colKey, value });
     };
 
+    const handleSort = (colKey) => {
+        const currentSort = sortConfig[colKey];
+        let newSortOrder = "ASC";
+
+        if (currentSort === "ASC") {
+            newSortOrder = "DESC";
+        } else if (currentSort === "DESC") {
+            newSortOrder = null;
+        }
+
+        const newSortConfig = {
+            ...sortConfig,
+            [colKey]: newSortOrder,
+        };
+
+        setSortConfig(newSortConfig);
+
+        if (onSort) {
+            if (newSortOrder) {
+                const snakeCaseKey = colKey.replace(/([A-Z])/g, "_$1").toLowerCase();
+                onSort({ sortBy: snakeCaseKey, order: newSortOrder });
+            } else {
+                onSort({ sortBy: null, order: null });
+            }
+        }
+    };
+
+    const getSortIcon = (colKey) => {
+        const currentSort = sortConfig[colKey];
+        if (currentSort === "ASC") {
+            return <FaSortUp className="rtg__sort-icon" />;
+        } else if (currentSort === "DESC") {
+            return <FaSortDown className="rtg__sort-icon" />;
+        }
+        return <FaSort className="rtg__sort-icon" />;
+    };
+
+    const getNestedValue = (obj, key) => {
+        if (!obj || !key) return undefined;
+        const parts = key.split("__");
+        return parts.reduce((acc, part) => (acc ? acc[part] : undefined), obj);
+    };
+
     const processedRows = useMemo(() => {
         let rows = Array.isArray(data) ? data : [];
 
@@ -92,8 +138,34 @@ const TableGrid = ({
             });
         }
 
+        if (paginationMode === "client") {
+            const sortableColumns = Object.keys(sortConfig).filter((key) => sortConfig[key]);
+            if (sortableColumns.length > 0) {
+                const sortKey = sortableColumns[0];
+                const sortOrder = sortConfig[sortKey];
+
+                rows.sort((a, b) => {
+                    const aVal = a[sortKey];
+                    const bVal = b[sortKey];
+
+                    if (aVal == null && bVal == null) return 0;
+                    if (aVal == null) return sortOrder === "ASC" ? 1 : -1;
+                    if (bVal == null) return sortOrder === "ASC" ? -1 : 1;
+
+                    if (typeof aVal === "string" && typeof bVal === "string") {
+                        const comparison = aVal.localeCompare(bVal);
+                        return sortOrder === "ASC" ? comparison : -comparison;
+                    }
+
+                    if (aVal < bVal) return sortOrder === "ASC" ? -1 : 1;
+                    if (aVal > bVal) return sortOrder === "ASC" ? 1 : -1;
+                    return 0;
+                });
+            }
+        }
+
         return rows;
-    }, [data, columnSearch, columnFilter, paginationMode]);
+    }, [data, columnSearch, columnFilter, sortConfig, paginationMode]);
 
     const totalRows =
         paginationMode === "client" ? processedRows.length : (totalCount ?? processedRows.length);
@@ -113,7 +185,6 @@ const TableGrid = ({
         overflow: "auto",
     };
 
-    // Calculate left offsets for sticky columns
     const leftOffsets = [];
     let cumulativeLeft = 0;
     columns.forEach((col) => {
@@ -161,7 +232,25 @@ const TableGrid = ({
                                             data-key={col.key}
                                         >
                                             <div className="rtg__th-inner">
-                                                <div className="rtg__title">{col.title}</div>
+                                                <div
+                                                    className="rtg__title"
+                                                    onClick={() =>
+                                                        col.sortable && handleSort(col.key)
+                                                    }
+                                                    style={
+                                                        col.sortable
+                                                            ? {
+                                                                  cursor: "pointer",
+                                                                  display: "flex",
+                                                                  alignItems: "center",
+                                                                  gap: "4px",
+                                                              }
+                                                            : {}
+                                                    }
+                                                >
+                                                    {col.title}
+                                                    {col.sortable && getSortIcon(col.key)}
+                                                </div>
                                                 {col.searchable && (
                                                     <input
                                                         type="search"
@@ -187,11 +276,17 @@ const TableGrid = ({
                                                         }
                                                         className="rtg__filter-select"
                                                     >
-                                                        <option value="">All</option>
+                                                        <option
+                                                            value=""
+                                                            className={`rtg__filter-select-option`}
+                                                        >
+                                                            All
+                                                        </option>
                                                         {col.filterOptions.map((opt) => (
                                                             <option
                                                                 key={opt.value}
                                                                 value={opt.value}
+                                                                className={`rtg__filter-select-option`}
                                                             >
                                                                 {opt.label}
                                                             </option>
@@ -252,9 +347,15 @@ const TableGrid = ({
                                                         ...stickyStyle,
                                                     }}
                                                 >
-                                                    {col.render
-                                                        ? col.render(row[col.key], row)
-                                                        : (row[col.key] ?? "")}
+                                                    {(() => {
+                                                        const cellValue = getNestedValue(
+                                                            row,
+                                                            col.key
+                                                        );
+                                                        return col.render
+                                                            ? col.render(cellValue, row)
+                                                            : (cellValue ?? "");
+                                                    })()}
                                                 </td>
                                             );
                                         })}
@@ -358,6 +459,7 @@ TableGrid.propTypes = {
             render: PropTypes.func,
             searchable: PropTypes.bool,
             filterable: PropTypes.bool,
+            sortable: PropTypes.bool,
             filterOptions: PropTypes.array,
             stick: PropTypes.bool,
         })
@@ -372,6 +474,7 @@ TableGrid.propTypes = {
     onPageSizeChange: PropTypes.func,
     onSearch: PropTypes.func,
     onFilter: PropTypes.func,
+    onSort: PropTypes.func,
     renderNoData: PropTypes.func,
     className: PropTypes.string,
     maxHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -390,6 +493,7 @@ TableGrid.defaultProps = {
     onPageSizeChange: undefined,
     onSearch: undefined,
     onFilter: undefined,
+    onSort: undefined,
     renderNoData: undefined,
     className: "",
 };

@@ -2,7 +2,7 @@
 
 import { menuItems } from "@/data/components/menuItems";
 
-export default function Sidebar({ activeItem, onItemClick }) {
+export default function Sidebar({ activeItem, onItemClick, onItemHover, onItemLeave }) {
     return (
         <div className="sidebar">
             <div className="sidebar__main">
@@ -13,6 +13,8 @@ export default function Sidebar({ activeItem, onItemClick }) {
                         key={item.id}
                         className={`sidebar__item ${activeItem?.id === item.id ? "sidebar__item--active" : ""}`}
                         onClick={() => onItemClick(item)}
+                        onMouseEnter={() => onItemHover(item)}
+                        onMouseLeave={onItemLeave}
                     >
                         <div className="sidebar__icon">{item.icon}</div>
                         <span className="sidebar__label">{item.label}</span>

@@ -1,8 +1,8 @@
 "use client";
-import Layout from "@/components/layout";
-import TableGrid from "@/components/tableGrid";
+import Layout from "@/components/layout/index.jsx";
+import TableGrid from "@/components/tableGrid/index.jsx";
 import React, { useEffect, useState } from "react";
-import { useAppContext } from "@/context/appContext";
+import { useAppContext } from "@/context/appContext/index.jsx";
 
 export default function Tenants() {
     const { state, dispatch } = useAppContext();
@@ -151,11 +151,7 @@ export default function Tenants() {
     ];
 
     return (
-        <Layout>
-            <div className="w-auto h-20 flex items-center justify-center bg-white m-[3vh]">
-                <p className="font-medium text-5xl">Tenants</p>
-            </div>
-
+        <Layout headerLabel={`Tenants`}>
             <TableGrid
                 columns={columns}
                 data={tenants}

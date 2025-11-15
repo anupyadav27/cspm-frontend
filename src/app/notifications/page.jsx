@@ -43,7 +43,7 @@ export default function NotificationsPage() {
                 setStats({ total: sorted.length, unread: unreadCount });
             }
         } catch (err) {
-            console.error("Error fetching notifications:", err);
+            console.info("Error fetching notifications:", err);
         } finally {
             setLoading(false);
         }

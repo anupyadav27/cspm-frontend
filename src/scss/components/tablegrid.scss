@@ -1,7 +1,5 @@
 .rtg {
-    position: relative;
     box-sizing: border-box;
-    margin: 3vh;
     font-family:
         Inter,
         -apple-system,
@@ -11,6 +9,7 @@
         Arial,
         serif;
     color: #0f1724;
+    width: calc(100vw - 6rem);
 
     --rtg-header-bg: #e8f3ff;
     --rtg-header-text: #0b62a8;
@@ -20,11 +19,11 @@
 }
 
 .rtg__container {
-    position: absolute;
+    position: relative;
     display: flex;
     flex-direction: column;
-    width: 100%;
     height: max-content;
+    overflow: auto;
     background: white;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
@@ -63,6 +62,7 @@
 .rtg__thead {
     position: sticky;
     top: 0;
+    text-align: center;
     z-index: 10;
     background: linear-gradient(180deg, var(--rtg-header-bg), #f6fbff);
 }
@@ -107,6 +107,8 @@
 
 .rtg__th-inner {
     display: flex;
+    text-align: center;
+    align-items: center;
     flex-direction: column;
     gap: 8px;
 }
@@ -121,13 +123,22 @@
 .rtg__filter-select {
     padding: 6px 8px;
     font-size: 1rem;
+    min-width: 80%;
     background: white;
     border: 1px solid var(--rtg-border);
     border-radius: 6px;
 }
 
+.rtg__filter-select{
+    cursor: pointer;
+}
+.rtg__filter-select-option {
+    cursor: pointer;
+}
+
 .rtg__tbody .rtg__td {
     font-size: 1rem;
+    @apply py-2;
 }
 
 .rtg__no-data {
@@ -141,7 +152,7 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 2px;
+    @apply py-1 px-4;
 }
 
 .rtg__pager-left,
