@@ -72,15 +72,12 @@ export const AppProvider = ({ children }) => {
                             user = data.user;
                             isAuthenticated = true;
                         }
-                        dispatch({ type: "SET_INITIALIZED", payload: true });
                     } else {
-                        dispatch({ type: "SET_INITIALIZED", payload: true });
                         setLoading(false);
                         return;
                     }
                 } catch (err) {
                     console.info("Session refresh failed:", err.message);
-                    dispatch({ type: "SET_INITIALIZED", payload: true });
                     setLoading(false);
                     return;
                 }
@@ -94,10 +91,12 @@ export const AppProvider = ({ children }) => {
                         validate: true,
                     }
                 );
+                alert(JSON.stringify(tenantData));
 
-                if (tenantData.error || tenantData.status !== 200 || tenantData.status !== 304) {
-                    console.info("Error fetching tenants:", tenantData.error);
+                if (tenantData.error || ![200, 304].includes(tenantData.status)) {
                     dispatch({ type: "SET_INITIALIZED", payload: false });
+                } else {
+                    dispatch({ type: "SET_INITIALIZED", payload: true });
                 }
 
                 if (tenantData.logOut) {
@@ -123,6 +122,12 @@ export const AppProvider = ({ children }) => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (state.isAuthenticated && !state.isInitialized) {
+            initializeApp();
+        }
+    }, [state.isAuthenticated]);
 
     useEffect(() => {
         initializeApp();

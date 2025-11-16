@@ -44,7 +44,6 @@ export default function Dashboard() {
     };
 
     const vulnScores = Array.from({ length: 200 }, () => Math.floor(Math.random() * 100));
-
     return (
         <Layout>
             <div className="dashboard">

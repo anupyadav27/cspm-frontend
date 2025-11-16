@@ -91,8 +91,8 @@ export default function Header({ title }) {
                             <div className="header__dropdown">
                                 {tenants.map((tenant) => (
                                     <button
-                                        key={tenant._id}
-                                        onClick={() => handleTenantSwitch(tenant._id)}
+                                        key={tenant.id}
+                                        onClick={() => handleTenantSwitch(tenant.id)}
                                         className={`header__dropdown-item ${
                                             selectedTenant?.id === tenant.id ? "active" : ""
                                         }`}

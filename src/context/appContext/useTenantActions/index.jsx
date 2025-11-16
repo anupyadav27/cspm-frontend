@@ -4,7 +4,7 @@ export const useTenantActions = () => {
     const { state, dispatch } = useAppContext();
 
     const switchTenant = (tenantId) => {
-        const tenant = state.tenants.data.find((t) => t._id === tenantId);
+        const tenant = state.tenants.data.find((t) => t.id === tenantId);
         if (tenant) {
             dispatch({ type: "SELECT_TENANT", payload: tenant });
             return { success: true, tenant };

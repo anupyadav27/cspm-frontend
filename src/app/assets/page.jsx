@@ -372,8 +372,8 @@ export default function Assets() {
                 maxWidth="100%"
                 renderNoData={() => "No assets found"}
             />
-            <div className="reports-main-container">
-                <div className="report__container-exportbtn">
+            <div className="assets__main-container">
+                <div className="assets__container-exportbtn">
                     <Button
                         onClick={() => downloadFile("pdf")}
                         disabled={downloadProgress.isDownloading}

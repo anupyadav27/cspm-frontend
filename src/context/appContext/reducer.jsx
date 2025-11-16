@@ -24,6 +24,7 @@ export function appReducer(state, action) {
                 role: action.payload.user?.roles?.[0] || null,
                 isAuthenticated: true,
                 isLoading: false,
+                isInitialized: false,
             };
             break;
 
