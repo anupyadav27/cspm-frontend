@@ -1,27 +1,26 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
 import Layout from "@/components/layout";
+import TableGrid from "@/components/tableGrid";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppContext } from "@/context/appContext";
 import { fetchData } from "@/utils/fetchData";
-import TableGrid from "@/components/tableGrid";
-import { useAuthActions } from "@/context/appContext/useAuthActions";
-import { ProgressLoader } from "@/components/loaders";
-import Button from "@/components/button";
-import { FaDownload } from "react-icons/fa";
+import Button from "@/components/button/index.jsx";
+import { FaDownload, FaChartBar, FaFileAlt, FaSearch, FaCheck, FaTimes } from "react-icons/fa";
+import { ProgressLoader } from "@/components/loaders/index.jsx";
 
 export default function Reports() {
     const { dispatch } = useAppContext();
-    const { handleLogout } = useAuthActions();
 
     const [reports, setReports] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [searchFilters, setSearchFilters] = useState({});
     const [filterValues, setFilterValues] = useState({});
+    const [sortConfig, setSortConfig] = useState({ sortBy: null, order: null });
     const [paginationData, setPaginationData] = useState(null);
-
     const [downloadProgress, setDownloadProgress] = useState({ isDownloading: false, progress: 0 });
+    const [docType, setDocType] = useState("xlsx");
 
     const searchFiltersRef = useRef(searchFilters);
     const filterValuesRef = useRef(filterValues);
@@ -31,6 +30,7 @@ export default function Reports() {
     }, [searchFilters, filterValues]);
 
     const buildExportUrl = (doctype) => {
+        setDocType(doctype);
         const queryParams = new URLSearchParams();
 
         for (const [key, value] of Object.entries(searchFiltersRef.current)) {
@@ -43,6 +43,10 @@ export default function Reports() {
             if (value !== undefined && value !== null && value !== "") {
                 queryParams.append(key, String(value));
             }
+        }
+        if (sortConfig.sortBy) {
+            queryParams.append("sort_by", sortConfig.sortBy);
+            queryParams.append("order", sortConfig.order?.toLowerCase() || "asc");
         }
 
         queryParams.append("doctype", doctype);
@@ -126,8 +130,8 @@ export default function Reports() {
 
             const queryParams = new URLSearchParams();
 
-            queryParams.append("page", String(page));
-            queryParams.append("pageSize", String(pageSize));
+            queryParams.append("page", page);
+            queryParams.append("pageSize", pageSize);
 
             for (const [key, value] of Object.entries(searchFilters)) {
                 if (value?.trim()) {
@@ -136,18 +140,18 @@ export default function Reports() {
             }
 
             for (const [key, value] of Object.entries(filterValues)) {
-                if (value !== undefined && value !== null && value !== "") {
-                    queryParams.append(key, String(value));
+                if (value) {
+                    queryParams.append(key, value);
                 }
+            }
+
+            if (sortConfig.sortBy && sortConfig.order) {
+                queryParams.append("sort_by", sortConfig.sortBy);
+                queryParams.append("order", sortConfig.order.toLowerCase());
             }
 
             const url = `${process.env.NEXT_PUBLIC_API_URL}/api/reports?${queryParams.toString()}`;
             const result = await fetchData(url, { force, validate });
-
-            if (result?.logOut) {
-                handleLogout(dispatch);
-                return;
-            }
 
             if (result?.data) {
                 setReports(result.data);
@@ -156,7 +160,7 @@ export default function Reports() {
                 setPaginationData(result.pagination);
             }
         } catch (error) {
-            console.info("Error fetching Reports:", error);
+            console.info("Error fetching reports:", error);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
@@ -164,7 +168,7 @@ export default function Reports() {
 
     useEffect(() => {
         loadReports({ validate: true });
-    }, [page, pageSize, searchFilters, filterValues]);
+    }, [page, pageSize, searchFilters, filterValues, sortConfig]);
 
     const handleColumnSearch = ({ key, value }) => {
         setSearchFilters((prev) => ({ ...prev, [key]: value }));
@@ -174,220 +178,174 @@ export default function Reports() {
         setFilterValues((prev) => ({ ...prev, [key]: value }));
     };
 
+    const handleSort = ({ sortBy, order }) => {
+        setSortConfig({ sortBy, order });
+    };
+
+    const handleEdit = (report) => {
+        alert(`Editing report: ${report.title}`);
+    };
+
+    const handleDelete = (report) => {
+        if (window.confirm(`Are you sure you want to delete report ${report.title}?`)) {
+            setReports((prev) => prev.filter((r) => r.id !== report.id));
+        }
+    };
+
     const columns = [
         {
-            key: "_id",
+            key: "id",
             title: "ID",
-            width: 90,
+            width: 70,
             stick: true,
+            sortable: true,
             render: (value) => value?.slice(-6) || "-",
         },
         {
-            key: "tenantId",
-            title: "Tenant",
-            width: 180,
-            render: (value) => value?.name || "-",
-        },
-        {
             key: "title",
-            title: "Title",
+            title: "Report Title",
             searchable: true,
+            sortable: true,
             width: 250,
-        },
-        {
-            key: "description",
-            title: "Description",
-            searchable: true,
-            width: 300,
-            render: (value) => {
-                if (!value) return "-";
-                return value.length > 60 ? value.slice(0, 60) + "..." : value;
-            },
-        },
-        {
-            key: "type",
-            title: "Type",
-            filterable: true,
-            width: 160,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Compliance", value: "compliance" },
-                { label: "Security Posture", value: "security_posture" },
-                { label: "Vulnerability", value: "vulnerability" },
-                { label: "Audit", value: "audit" },
-                { label: "Custom", value: "custom" },
-            ],
+            stick: true,
             render: (value) => (
-                <span
-                    style={{
-                        backgroundColor: value === "compliance" ? "#e0f2fe" : "#f0fdf4",
-                        color: value === "compliance" ? "#0284c7" : "#16a34a",
-                        padding: "2px 6px",
-                        borderRadius: "6px",
-                        textTransform: "capitalize",
-                    }}
-                >
-                    {value?.replace(/_/g, " ") || "-"}
-                </span>
-            ),
-        },
-        {
-            key: "format",
-            title: "Format",
-            filterable: true,
-            width: 100,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "PDF", value: "pdf" },
-                { label: "CSV", value: "csv" },
-                { label: "JSON", value: "json" },
-                { label: "XLSX", value: "xlsx" },
-            ],
-            render: (value) => (
-                <span
-                    style={{
-                        backgroundColor: "#f3f4f6",
-                        color: "#111827",
-                        padding: "2px 6px",
-                        borderRadius: "6px",
-                        textTransform: "uppercase",
-                    }}
-                >
+                <span className="report-title" style={{ color: "#1d4ed8", fontWeight: 600 }}>
                     {value || "-"}
                 </span>
             ),
         },
         {
-            key: "generatedBy",
-            title: "Generated By",
-            width: 200,
-            render: (value) => {
-                if (!value) return "-";
-                const name = value.name
-                    ? `${value.name.first || ""} ${value.name.last || ""}`.trim()
-                    : value.email?.split("@")[0] || "-";
-                return `${name} (${value.email ? value.email.split("@")[0] : "?"})`;
-            },
+            key: "tenant_id",
+            title: "Tenant ID",
+            searchable: true,
+            sortable: true,
+            width: 180,
+            render: (value) => value?.slice(-6) || "-",
         },
         {
-            key: "scheduled",
-            title: "Scheduled",
+            key: "tenants__name",
+            title: "Tenant Name",
+            searchable: true,
+            sortable: true,
+            width: 180,
+        },
+        {
+            key: "type",
+            title: "Report Type",
             filterable: true,
-            width: 120,
+            sortable: true,
             filterOptions: [
-                { label: "All", value: "" },
-                { label: "Yes", value: "true" },
-                { label: "No", value: "false" },
+                { label: "Vulnerability", value: "vulnerability" },
+                { label: "Compliance", value: "compliance" },
+                { label: "Security", value: "security" },
+                { label: "Audit", value: "audit" },
+                { label: "Risk Assessment", value: "risk_assessment" },
             ],
-            render: (value) => (
-                <span style={{ color: value ? "#22c55e" : "#ef4444", fontWeight: 600 }}>
-                    {value ? "Yes" : "No"}
-                </span>
-            ),
+            render: (value) => {
+                const typeMap = {
+                    vulnerability: { color: "#dc2626", bg: "#fee2e2", icon: <FaChartBar /> },
+                    compliance: { color: "#8b5cf6", bg: "#ede9fe", icon: <FaFileAlt /> },
+                    security: { color: "#3b82f6", bg: "#dbeafe", icon: <FaChartBar /> },
+                    audit: { color: "#f59e0b", bg: "#ffedd5", icon: <FaFileAlt /> },
+                    risk_assessment: { color: "#ec4899", bg: "#fce7f3", icon: <FaChartBar /> },
+                };
+                const style = typeMap[value] || { color: "#6b7280", bg: "#f3f4f6" };
+
+                return (
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            backgroundColor: style.bg,
+                            color: style.color,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                        }}
+                    >
+                        {style.icon}
+                        {value?.replace(/_/g, " ")?.toUpperCase() || "-"}
+                    </div>
+                );
+            },
         },
         {
             key: "status",
             title: "Status",
             filterable: true,
-            width: 130,
+            sortable: true,
             filterOptions: [
-                { label: "All", value: "" },
                 { label: "Pending", value: "pending" },
                 { label: "Completed", value: "completed" },
                 { label: "Failed", value: "failed" },
             ],
             render: (value) => {
-                const config = {
-                    completed: { text: "Completed", color: "#22c55e", bg: "#dcfce7" },
-                    failed: { text: "Failed", color: "#ef4444", bg: "#fee2e2" },
-                    pending: { text: "Pending", color: "#eab308", bg: "#fef9c3" },
-                }[value] || { text: "-", color: "#333", bg: "#f4f4f4" };
+                const statusMap = {
+                    pending: { color: "#f59e0b", bg: "#ffedd5", icon: <FaSearch /> },
+                    completed: { color: "#10b981", bg: "#d1fae5", icon: <FaCheck /> },
+                    failed: { color: "#dc2626", bg: "#fee2e2", icon: <FaTimes /> },
+                };
+                const style = statusMap[value] || { color: "#6b7280", bg: "#f3f4f6" };
 
                 return (
-                    <span
+                    <div
                         style={{
-                            backgroundColor: config.bg,
-                            color: config.color,
-                            padding: "2px 6px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            backgroundColor: style.bg,
+                            color: style.color,
+                            padding: "4px 8px",
                             borderRadius: "6px",
+                            fontSize: "12px",
                             fontWeight: 600,
                         }}
                     >
-                        {config.text}
-                    </span>
+                        {style.icon}
+                        {value?.toUpperCase() || "-"}
+                    </div>
                 );
             },
         },
         {
-            key: "triggeredByAutomation",
-            title: "Automation",
-            filterable: true,
-            width: 120,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Yes", value: "true" },
-                { label: "No", value: "false" },
-            ],
+            key: "description",
+            title: "Description",
+            searchable: true,
+            sortable: false,
+            width: 300,
             render: (value) => (
-                <span style={{ color: value ? "#16a34a" : "#71717a", fontWeight: 500 }}>
-                    {value ? "Yes" : "No"}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <FaSearch style={{ color: "#9ca3af", fontSize: "12px" }} />
+                    <span style={{ fontSize: "13px", color: "#4b5563", lineHeight: "1.4" }}>
+                        {value?.substring(0, 80) || "-"}
+                        {value?.length > 80 ? "..." : ""}
+                    </span>
+                </div>
             ),
         },
         {
-            key: "generatedAt",
+            key: "generated_by",
+            title: "Generated By",
+            searchable: true,
+            sortable: true,
+            width: 150,
+            render: (value) => value || "-",
+        },
+        {
+            key: "generated_at",
             title: "Generated At",
-            width: 170,
+            width: 160,
+            sortable: true,
             render: (value) => (value ? new Date(value).toLocaleString() : "-"),
         },
         {
-            key: "createdAt",
+            key: "created_at",
             title: "Created At",
-            width: 170,
+            width: 160,
+            sortable: true,
             render: (value) => (value ? new Date(value).toLocaleString() : "-"),
-        },
-        {
-            key: "updatedAt",
-            title: "Updated At",
-            width: 170,
-            render: (value) => (value ? new Date(value).toLocaleString() : "-"),
-        },
-        {
-            key: "relatedAssets",
-            title: "Assets",
-            width: 90,
-            render: (value) => (Array.isArray(value) ? value.length : 0),
-        },
-        {
-            key: "relatedPolicies",
-            title: "Policies",
-            width: 100,
-            render: (value) => (Array.isArray(value) ? value.length : 0),
-        },
-        {
-            key: "relatedCompliance",
-            title: "Compliance",
-            width: 110,
-            render: (value) => (Array.isArray(value) ? value.length : 0),
-        },
-        {
-            key: "fileUrl",
-            title: "Download",
-            width: 120,
-            render: (value) =>
-                value ? (
-                    <a
-                        href={value}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline hover:text-blue-800"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        View
-                    </a>
-                ) : (
-                    "-"
-                ),
         },
     ];
 
@@ -404,17 +362,45 @@ export default function Reports() {
                 totalCount={paginationData?.total}
                 onSearch={handleColumnSearch}
                 onFilter={handleFilterChange}
-                pageSizeOptions={[5, 10, 20, 50]}
-                maxHeight="65vh"
+                onSort={handleSort}
+                pageSizeOptions={[10, 20, 50]}
+                maxHeight="60vh"
                 maxWidth="100%"
-                renderNoData={() => "No reports found"}
+                renderNoData={() => (
+                    <div style={{ textAlign: "center", padding: "40px", color: "#6b7280" }}>
+                        <FaChartBar size={48} style={{ margin: "0 auto 16px", color: "#d1d5db" }} />
+                        <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>
+                            No Reports Found
+                        </h3>
+                        <p>There are currently no reports matching your search criteria.</p>
+                    </div>
+                )}
             />
-            <div className="reports-main-container">
-                <div className="report__container-exportbtn">
+            <div
+                className="reports__main-container"
+                style={{
+                    padding: "5px",
+                    backgroundColor: "#ffffff",
+                    borderRadius: "8px",
+                    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+                }}
+            >
+                <div
+                    className="reports__container-exportbtn"
+                    style={{
+                        display: "flex",
+                        gap: "12px",
+                        justifyContent: "center",
+                    }}
+                >
                     <Button
                         onClick={() => downloadFile("pdf")}
                         disabled={downloadProgress.isDownloading}
-                        text={downloadProgress.isDownloading ? "Exporting..." : "Download as PDF"}
+                        text={
+                            downloadProgress.isDownloading && docType === "pdf"
+                                ? "Exporting PDF..."
+                                : "Download PDF"
+                        }
                         danger
                         iconRight={<FaDownload />}
                     />
@@ -422,7 +408,11 @@ export default function Reports() {
                     <Button
                         onClick={() => downloadFile("xlsx")}
                         disabled={downloadProgress.isDownloading}
-                        text={downloadProgress.isDownloading ? "Exporting..." : "Download as Excel"}
+                        text={
+                            downloadProgress.isDownloading && docType === "xlsx"
+                                ? "Exporting Excel..."
+                                : "Download Excel"
+                        }
                         success
                         iconRight={<FaDownload />}
                     />

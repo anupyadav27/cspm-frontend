@@ -37,9 +37,11 @@ export default function Layout({ children, headerLabel, isLoading = false }) {
     }, [pathname]);
 
     const handleSidebarClick = (item) => {
-        dispatch({ type: "SET_LOADING", payload: true });
-        setActiveItem(item);
-        router.push(item.link);
+        if (!pathname.startsWith(item.link)) {
+            dispatch({ type: "SET_LOADING", payload: true });
+            setActiveItem(item);
+            router.push(item.link);
+        }
     };
 
     const isSubSidebarVisible = hoveredItem?.subMenu?.length > 0;

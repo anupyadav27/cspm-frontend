@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAppContext } from "@/context/appContext";
 import { fetchData } from "@/utils/fetchData";
 import Button from "@/components/button/index.jsx";
-import { FaDownload } from "react-icons/fa";
+import { FaBox, FaDownload, FaShieldAlt, FaExclamationTriangle } from "react-icons/fa";
 import { ProgressLoader } from "@/components/loaders/index.jsx";
 
 export default function Assets() {
@@ -100,7 +100,7 @@ export default function Assets() {
 
             const blob = new Blob(chunks);
             const extension = doctype === "pdf" ? "pdf" : "xlsx";
-            const fileName = `reports_export_${new Date().toISOString().split("T")[0]}.${extension}`;
+            const fileName = `assets_export_${new Date().toISOString().split("T")[0]}.${extension}`;
 
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -187,7 +187,7 @@ export default function Assets() {
     };
 
     const handleDelete = (asset) => {
-        if (window.confirm(`Are you sure you want to delete ${asset.name}?`)) {
+        if (window.confirm(`Are you sure you want to delete asset ${asset.name}?`)) {
             setAssets((prev) => prev.filter((a) => a.id !== asset.id));
         }
     };
@@ -206,8 +206,13 @@ export default function Assets() {
             title: "Asset Name",
             searchable: true,
             sortable: true,
-            width: 200,
+            width: 220,
             stick: true,
+            render: (value, row) => (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontWeight: 500 }}>{value || "-"}</span>
+                </div>
+            ),
         },
         {
             key: "tenant_id",
@@ -231,23 +236,60 @@ export default function Assets() {
             searchable: true,
             sortable: true,
             filterOptions: [
-                { label: "VM", value: "vm" },
-                { label: "S3", value: "s3" },
-                { label: "Bucket", value: "bucket" },
+                { label: "Virtual Machine", value: "vm" },
+                { label: "S3 Bucket", value: "s3" },
+                { label: "Database", value: "database" },
+                { label: "Network", value: "network" },
+                { label: "Storage", value: "storage" },
+                { label: "Container", value: "container" },
             ],
-            render: (value) => (
-                <span
-                    style={{
-                        backgroundColor: value === "vm" ? "#f0f7ff" : "#fef7e6",
-                        color: value === "vm" ? "#0b62a8" : "#9c6b00",
-                        padding: "2px 6px",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                    }}
-                >
-                    {value?.toUpperCase() || "-"}
-                </span>
-            ),
+            render: (value) => {
+                const type = value?.toLowerCase() || "";
+                let bgColor = "#e5e7eb";
+                let color = "#374151";
+
+                switch (type) {
+                    case "vm":
+                    case "virtual_machine":
+                        bgColor = "#dbeafe";
+                        color = "#1d4ed8";
+                        break;
+                    case "s3":
+                    case "bucket":
+                        bgColor = "#f3e8ff";
+                        color = "#7e22ce";
+                        break;
+                    case "database":
+                        bgColor = "#dcfce7";
+                        color = "#166534";
+                        break;
+                    case "network":
+                        bgColor = "#fef3c7";
+                        color = "#b45309";
+                        break;
+                    default:
+                        bgColor = "#e5e7eb";
+                        color = "#374151";
+                }
+
+                return (
+                    <span
+                        style={{
+                            backgroundColor: bgColor,
+                            color: color,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                        }}
+                    >
+                        {value?.toUpperCase() || "-"}
+                    </span>
+                );
+            },
         },
         {
             key: "provider",
@@ -261,7 +303,44 @@ export default function Assets() {
                 { label: "GCP", value: "gcp" },
                 { label: "On-Prem", value: "on_prem" },
             ],
-            render: (value) => value?.toUpperCase() || "-",
+            render: (value) => {
+                const provider = value?.toLowerCase() || "";
+                let bgColor = "#e5e7eb";
+                let color = "#374151";
+
+                switch (provider) {
+                    case "aws":
+                        bgColor = "#feefc3";
+                        color = "#9d5c0c";
+                        break;
+                    case "azure":
+                        bgColor = "#d1e7ff";
+                        color = "#0d6efd";
+                        break;
+                    case "gcp":
+                        bgColor = "#d4f8e8";
+                        color = "#1a7f37";
+                        break;
+                    default:
+                        bgColor = "#e5e7eb";
+                        color = "#374151";
+                }
+
+                return (
+                    <span
+                        style={{
+                            backgroundColor: bgColor,
+                            color: color,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                        }}
+                    >
+                        {value?.toUpperCase() || "-"}
+                    </span>
+                );
+            },
         },
         {
             key: "region",
@@ -283,7 +362,48 @@ export default function Assets() {
                 { label: "Production", value: "production" },
                 { label: "Test", value: "test" },
             ],
-            render: (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"),
+            render: (value) => {
+                const env = value?.toLowerCase() || "";
+                let bgColor = "#e5e7eb";
+                let color = "#374151";
+
+                switch (env) {
+                    case "production":
+                        bgColor = "#dcfce7";
+                        color = "#166534";
+                        break;
+                    case "staging":
+                        bgColor = "#fef3c7";
+                        color = "#b45309";
+                        break;
+                    case "development":
+                        bgColor = "#dbeafe";
+                        color = "#1d4ed8";
+                        break;
+                    case "test":
+                        bgColor = "#ede9fe";
+                        color = "#7e22ce";
+                        break;
+                    default:
+                        bgColor = "#e5e7eb";
+                        color = "#374151";
+                }
+
+                return (
+                    <span
+                        style={{
+                            backgroundColor: bgColor,
+                            color: color,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                        }}
+                    >
+                        {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
+                    </span>
+                );
+            },
         },
         {
             key: "lifecycle_state",
@@ -297,14 +417,40 @@ export default function Assets() {
                 { label: "Decommissioned", value: "decommissioned" },
             ],
             render: (value) => {
-                const color =
-                    value === "active"
-                        ? "#22c55e"
-                        : value === "terminated" || value === "decommissioned"
-                          ? "#ef4444"
-                          : "#f59e0b";
+                const state = value?.toLowerCase() || "";
+                let bgColor = "#e5e7eb";
+                let color = "#374151";
+
+                switch (state) {
+                    case "active":
+                        bgColor = "#dcfce7";
+                        color = "#166534";
+                        break;
+                    case "terminated":
+                    case "decommissioned":
+                        bgColor = "#fee2e2";
+                        color = "#dc2626";
+                        break;
+                    case "inactive":
+                        bgColor = "#fef3c7";
+                        color = "#b45309";
+                        break;
+                    default:
+                        bgColor = "#e5e7eb";
+                        color = "#374151";
+                }
+
                 return (
-                    <span style={{ color, fontWeight: 600 }}>
+                    <span
+                        style={{
+                            backgroundColor: bgColor,
+                            color: color,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                        }}
+                    >
                         {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
                     </span>
                 );
@@ -322,16 +468,90 @@ export default function Assets() {
                 { label: "Unknown", value: "unknown" },
             ],
             render: (value) => {
-                const color =
-                    value === "critical"
-                        ? "#ef4444"
-                        : value === "warning"
-                          ? "#f59e0b"
-                          : value === "healthy"
-                            ? "#22c55e"
-                            : "#9ca3af";
+                const status = value?.toLowerCase() || "";
+                let bgColor = "#e5e7eb";
+                let color = "#374151";
+
+                switch (status) {
+                    case "critical":
+                        bgColor = "#fee2e2";
+                        color = "#dc2626";
+                        return (
+                            <span
+                                style={{
+                                    backgroundColor: bgColor,
+                                    color: color,
+                                    padding: "4px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                }}
+                            >
+                                <FaExclamationTriangle />
+                                {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
+                            </span>
+                        );
+                    case "warning":
+                        bgColor = "#fef3c7";
+                        color = "#b45309";
+                        return (
+                            <span
+                                style={{
+                                    backgroundColor: bgColor,
+                                    color: color,
+                                    padding: "4px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                }}
+                            >
+                                <FaExclamationTriangle />
+                                {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
+                            </span>
+                        );
+                    case "healthy":
+                        bgColor = "#dcfce7";
+                        color = "#166534";
+                        return (
+                            <span
+                                style={{
+                                    backgroundColor: bgColor,
+                                    color: color,
+                                    padding: "4px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                }}
+                            >
+                                <FaShieldAlt />
+                                {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
+                            </span>
+                        );
+                    default:
+                        bgColor = "#e5e7eb";
+                        color = "#374151";
+                }
+
                 return (
-                    <span style={{ color, fontWeight: 600 }}>
+                    <span
+                        style={{
+                            backgroundColor: bgColor,
+                            color: color,
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                        }}
+                    >
                         {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
                     </span>
                 );
@@ -355,60 +575,93 @@ export default function Assets() {
 
     return (
         <Layout>
-            <TableGrid
-                columns={columns}
-                data={assets}
-                paginationMode="server"
-                controlledPage={page}
-                controlledPageSize={pageSize}
-                onPageChange={setPage}
-                onPageSizeChange={setPageSize}
-                totalCount={paginationData?.total}
-                onSearch={handleColumnSearch}
-                onFilter={handleFilterChange}
-                onSort={handleSort}
-                pageSizeOptions={[10, 20, 50]}
-                maxHeight="60vh"
-                maxWidth="100%"
-                renderNoData={() => "No assets found"}
-            />
-            <div className="assets__main-container">
-                <div className="assets__container-exportbtn">
-                    <Button
-                        onClick={() => downloadFile("pdf")}
-                        disabled={downloadProgress.isDownloading}
-                        text={
-                            downloadProgress.isDownloading && docType === "pdf"
-                                ? "Exporting..."
-                                : "Download as PDF"
-                        }
-                        danger
-                        iconRight={<FaDownload />}
-                    />
+            <div>
+                <TableGrid
+                    columns={columns}
+                    data={assets}
+                    paginationMode="server"
+                    controlledPage={page}
+                    controlledPageSize={pageSize}
+                    onPageChange={setPage}
+                    onPageSizeChange={setPageSize}
+                    totalCount={paginationData?.total}
+                    onSearch={handleColumnSearch}
+                    onFilter={handleFilterChange}
+                    onSort={handleSort}
+                    pageSizeOptions={[10, 20, 50, 100]}
+                    maxHeight="60vh"
+                    maxWidth="100%"
+                    renderNoData={() => (
+                        <div
+                            style={{
+                                textAlign: "center",
+                                padding: "60px 20px",
+                                color: "#6b7280",
+                                backgroundColor: "#f9fafb",
+                                borderRadius: "8px",
+                                border: "1px dashed #d1d5db",
+                            }}
+                        >
+                            <FaBox size={64} style={{ margin: "0 auto 16px", color: "#d1d5db" }} />
+                            <h3
+                                style={{
+                                    fontSize: "20px",
+                                    fontWeight: 600,
+                                    marginBottom: "8px",
+                                    color: "#374151",
+                                }}
+                            >
+                                No Assets Found
+                            </h3>
+                            <p style={{ fontSize: "16px", marginBottom: "16px" }}>
+                                There are currently no assets matching your search criteria.
+                            </p>
+                            <Button onClick={() => {}} text="Add New Asset" primary />
+                        </div>
+                    )}
+                />
 
-                    <Button
-                        onClick={() => downloadFile("xlsx")}
-                        disabled={downloadProgress.isDownloading}
-                        text={
-                            downloadProgress.isDownloading && docType === "xlsx"
-                                ? "Exporting..."
-                                : "Download as Excel"
-                        }
-                        success
-                        iconRight={<FaDownload />}
-                    />
-                </div>
+                <div className="assets__main-container">
+                    <div className="assets__container-exportbtn">
+                        <Button
+                            onClick={() => downloadFile("pdf")}
+                            disabled={downloadProgress.isDownloading}
+                            text={
+                                downloadProgress.isDownloading && docType === "pdf"
+                                    ? "Exporting PDF..."
+                                    : "Download PDF"
+                            }
+                            danger
+                            iconRight={<FaDownload />}
+                        />
 
-                {downloadProgress.isDownloading && (
-                    <div className="progress__loader-container">
-                        <ProgressLoader
-                            value={downloadProgress.progress}
-                            max={100}
-                            color={`success`}
-                            showLabel={true}
+                        <Button
+                            onClick={() => downloadFile("xlsx")}
+                            disabled={downloadProgress.isDownloading}
+                            text={
+                                downloadProgress.isDownloading && docType === "xlsx"
+                                    ? "Exporting Excel..."
+                                    : "Download Excel"
+                            }
+                            success
+                            iconRight={<FaDownload />}
                         />
                     </div>
-                )}
+
+                    {downloadProgress.isDownloading && (
+                        <div
+                            className="progress__loader-container"
+                            style={{ maxWidth: "500px", margin: "0 auto" }}
+                        >
+                            <ProgressLoader
+                                value={downloadProgress.progress}
+                                max={100}
+                                color={`success`}
+                                showLabel={true}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </Layout>
     );

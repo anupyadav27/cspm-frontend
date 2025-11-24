@@ -289,3 +289,17 @@
 .rtg-toggle input:checked + .rtg-toggle-slider::before {
     transform: translateX(20px);
 }
+
+@media (width <= 620px) {
+
+    .rtg__th--sticky,
+    .rtg__td--sticky {
+        position: static !important;
+        z-index: auto !important;
+        background: inherit !important;
+    }
+
+    .rtg__thead {
+        position: static !important;
+    }
+}

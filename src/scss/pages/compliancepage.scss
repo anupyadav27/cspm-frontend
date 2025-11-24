@@ -1,7 +1,7 @@
-.assets__main-container {
+.compliance__main-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     width: 100%;
     padding: 5px;
     background-color: white;
@@ -10,7 +10,7 @@
 
 }
 
-.assets__container-exportbtn {
+.compliance__container-exportbtn {
     display: flex;
     gap: 1rem;
     justify-content: center;

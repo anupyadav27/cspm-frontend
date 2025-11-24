@@ -275,6 +275,8 @@ const TableGrid = ({
                                                             )
                                                         }
                                                         className="rtg__filter-select"
+                                                        id={`filter-${col.key}`}
+                                                        aria-label={`Filter by ${col.title}`}
                                                     >
                                                         <option
                                                             value=""
@@ -420,6 +422,8 @@ const TableGrid = ({
                     <div className="rtg__pager-right">
                         <label className="rtg__pagesize-label">Rows</label>
                         <select
+                            id="page-size"
+                            aria-label="Rows per page"
                             className="rtg__select"
                             value={pageSize}
                             onChange={(e) => changePageSize(e.target.value)}

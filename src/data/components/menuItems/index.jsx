@@ -78,17 +78,17 @@ export const menuItems = [
             { label: "Manage Policies", route: "/policies/manage" },
         ],
     },
-    {
-        id: "secops",
-        label: "SecOps",
-        icon: <FaUserShield />,
-        link: "/secops",
-        subMenu: [
-            { label: "Incidents", route: "/secops/incidents" },
-            { label: "Playbooks", route: "/secops/playbooks" },
-            { label: "Metrics", route: "/secops/metrics" },
-        ],
-    },
+    // {
+    //     id: "secops",
+    //     label: "SecOps",
+    //     icon: <FaUserShield />,
+    //     link: "/secops",
+    //     subMenu: [
+    //         { label: "Incidents", route: "/secops/incidents" },
+    //         { label: "Playbooks", route: "/secops/playbooks" },
+    //         { label: "Metrics", route: "/secops/metrics" },
+    //     ],
+    // },
     {
         id: "reports",
         label: "Reports",
