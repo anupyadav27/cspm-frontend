@@ -6,32 +6,29 @@ echo "=========================================="
 echo "Quick Local Test Setup"
 echo "=========================================="
 
-# Start database if not running
-if ! docker ps | grep -q threat-engine-postgres; then
-    echo "Starting PostgreSQL database..."
-    cd /Users/apple/Desktop/onboarding
-    docker-compose -f docker-compose.db.yml up -d
-    echo "Waiting for database to be ready..."
-    sleep 5
+# Check AWS credentials
+echo "Checking AWS configuration..."
+if ! aws sts get-caller-identity &>/dev/null; then
+    echo "⚠️  AWS credentials not configured. Set AWS_REGION and ensure credentials are available."
+    echo "   The API will still start but DynamoDB/Secrets Manager operations may fail."
 fi
 
-# Initialize database schema if needed
-echo "Checking database schema..."
+# Initialize DynamoDB tables if needed
+echo "Checking DynamoDB tables..."
 cd /Users/apple/Desktop/onboarding
-export PYTHONPATH=/Users/apple/Desktop/onboarding:$PYTHONPATH
+export PYTHONPATH=/Users/apple/Desktop:$PYTHONPATH
 python3 << 'EOF'
 import sys
 import os
-sys.path.insert(0, '/Users/apple/Desktop/onboarding')
+sys.path.insert(0, '/Users/apple/Desktop')
 os.chdir('/Users/apple/Desktop/onboarding')
 try:
-    from onboarding.database.connection import init_db
-    init_db()
-    print("Database schema initialized")
+    from onboarding.database.dynamodb_tables import create_tables
+    create_tables()
+    print("✅ DynamoDB tables verified/created")
 except Exception as e:
-    print(f"Schema check: {e}")
-    import traceback
-    traceback.print_exc()
+    print(f"⚠️  DynamoDB check: {e}")
+    print("   Tables may already exist or AWS credentials not configured")
 EOF
 
 # Start services

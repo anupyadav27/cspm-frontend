@@ -98,33 +98,21 @@ async def test_yaml_builder_health():
 async def test_create_tenant():
     """Test creating a tenant (using direct database or API if available)"""
     print_step("4", "Creating Test Tenant")
-    print_info("Note: Creating tenant directly via database connection")
+    print_info("Note: Creating tenant via DynamoDB")
     
     try:
-        # Try to create tenant via database
+        # Create tenant via DynamoDB
         import sys
         import os
-        sys.path.insert(0, '/Users/apple/Desktop/onboarding')
+        sys.path.insert(0, '/Users/apple/Desktop')
+        os.environ['AWS_REGION'] = 'ap-south-1'
         
-        from onboarding.database.connection import SessionLocal
-        from onboarding.database.models import Tenant
-        import uuid
+        from onboarding.database.dynamodb_operations import create_tenant
         
-        db = SessionLocal()
-        try:
-            tenant = Tenant(
-                tenant_id=uuid.uuid4(),
-                tenant_name="Test Tenant",
-                status="active"
-            )
-            db.add(tenant)
-            db.commit()
-            db.refresh(tenant)
-            tenant_id = str(tenant.tenant_id)
-            print_success(f"Tenant created: {tenant_id}")
-            return tenant_id
-        finally:
-            db.close()
+        tenant = create_tenant("test-tenant", "Test Tenant")
+        tenant_id = tenant['tenant_id']
+        print_success(f"Tenant created: {tenant_id}")
+        return tenant_id
     except Exception as e:
         print_error(f"Error creating tenant: {e}")
         print_info("You can manually create a tenant in the database or use an existing tenant_id")

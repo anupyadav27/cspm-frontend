@@ -1,250 +1,264 @@
-# Local Testing Guide
-
-This guide helps you test the onboarding, AWS engine, and YAML rule builder services locally.
+# Testing Guide - Onboarding API
 
 ## Prerequisites
 
-1. **PostgreSQL Database** - Start the local database:
+1. **AWS Credentials** - Configure AWS credentials for DynamoDB and Secrets Manager:
    ```bash
-   cd /Users/apple/Desktop/onboarding
-   docker-compose -f docker-compose.db.yml up -d
+   export AWS_REGION=ap-south-1
+   export AWS_ACCESS_KEY_ID=your-key
+   export AWS_SECRET_ACCESS_KEY=your-secret
    ```
 
-2. **Python Dependencies** - Install dependencies for all services:
+2. **DynamoDB Tables** - Ensure tables are created:
    ```bash
-   # Onboarding
-   cd /Users/apple/Desktop/onboarding
+   python3 -c "from onboarding.database.dynamodb_tables import create_tables; create_tables()"
+   ```
+
+3. **Python Dependencies** - Install requirements:
+   ```bash
    pip install -r requirements.txt
-   
-   # AWS Engine
-   cd /Users/apple/Desktop/threat-engine/aws_compliance_python_engine
-   pip install -r requirements.txt fastapi uvicorn
-   
-   # YAML Rule Builder
-   cd /Users/apple/Desktop/threat-engine/yaml-rule-builder
-   pip install -r requirements.txt fastapi uvicorn
    ```
 
-## Quick Start
+## Local Testing
 
-### Option 1: Automated Script
+### 1. Start Onboarding API
 
 ```bash
 cd /Users/apple/Desktop/onboarding
-./start_local_services.sh
+python main.py
 ```
 
-Then in another terminal:
-```bash
-cd /Users/apple/Desktop/onboarding
-python3 test_local.py
-```
+API will be available at `http://localhost:8000`
 
-### Option 2: Manual Start
-
-#### Terminal 1: Onboarding API
-```bash
-cd /Users/apple/Desktop/onboarding
-python3 main.py
-```
-Service will run on: `http://localhost:8000`
-
-#### Terminal 2: AWS Engine API
-```bash
-cd /Users/apple/Desktop/threat-engine/aws_compliance_python_engine
-PORT=8001 python3 api_server.py
-```
-Service will run on: `http://localhost:8001`
-
-#### Terminal 3: YAML Rule Builder API
-```bash
-cd /Users/apple/Desktop/threat-engine/yaml-rule-builder
-PORT=8002 python3 api_server.py
-```
-Service will run on: `http://localhost:8002`
-
-#### Terminal 4: Run Tests
-```bash
-cd /Users/apple/Desktop/onboarding
-python3 test_local.py
-```
-
-## Test Flow
-
-The test script (`test_local.py`) will:
-
-1. **Health Checks** - Verify all services are running
-2. **Create Tenant** - Create a test tenant
-3. **Initialize AWS Onboarding** - Set up AWS account onboarding
-4. **Validate Credentials** - Test credential validation (will fail with test credentials, but tests the flow)
-5. **List AWS Services** - Get available AWS services from engine
-6. **Create Scan** - Test scan creation (will fail without real credentials)
-7. **Get Scan Status** - Check scan progress
-8. **Get Metrics** - View engine metrics
-9. **YAML Builder Tests**:
-   - List services
-   - Get service fields
-   - Validate rule
-   - Generate rule
-
-## Manual Testing Examples
-
-### 1. Test Onboarding API
+### 2. Test Health Endpoint
 
 ```bash
-# Health check
 curl http://localhost:8000/api/v1/health
+```
 
-# Create tenant
-curl -X POST http://localhost:8000/api/v1/onboarding/tenants \
-  -H "Content-Type: application/json" \
-  -d '{"tenant_name": "Test Tenant"}'
+Expected response:
+```json
+{
+  "status": "healthy",
+  "dynamodb": "connected",
+  "secrets_manager": "connected",
+  "version": "1.0.0"
+}
+```
 
-# Initialize AWS onboarding
+### 3. Run Test Scripts
+
+**Test AWS Setup:**
+```bash
+python3 test_aws_setup.py
+```
+
+**Test Local API:**
+```bash
+python3 test_local.py
+```
+
+**Quick Test (with service startup):**
+```bash
+./quick_test.sh
+```
+
+## API Testing
+
+### Test Onboarding Flow
+
+**1. Get Available Methods:**
+```bash
+curl http://localhost:8000/api/v1/onboarding/aws/methods
+```
+
+**2. Initialize Onboarding:**
+```bash
 curl -X POST http://localhost:8000/api/v1/onboarding/aws/init \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id": "YOUR_TENANT_ID",
-    "account_name": "Test AWS Account",
-    "auth_method": "iam_role"
+    "tenant_id": "test-tenant-123",
+    "account_name": "Test Account"
   }'
 ```
 
-### 2. Test AWS Engine API
-
+**3. Get CloudFormation Template:**
 ```bash
-# Health check
-curl http://localhost:8001/api/v1/health
+# Use external_id from init response
+curl "http://localhost:8000/api/v1/onboarding/aws/cloudformation-template?external_id=YOUR_EXTERNAL_ID"
+```
 
-# List services
-curl http://localhost:8001/api/v1/services
-
-# Create scan (replace with real credentials)
-curl -X POST http://localhost:8001/api/v1/scan \
+**4. Validate Account (with test credentials):**
+```bash
+curl -X POST http://localhost:8000/api/v1/onboarding/aws/validate \
   -H "Content-Type: application/json" \
   -d '{
-    "account": "123456789012",
+    "account_id": "account-uuid-from-init",
+    "auth_method": "iam_role",
     "credentials": {
-      "credential_type": "aws_iam_role",
-      "role_arn": "arn:aws:iam::123456789012:role/ThreatEngineComplianceRole",
-      "external_id": "your-external-id",
+      "role_arn": "arn:aws:iam::123456789012:role/TestRole",
+      "external_id": "test-external-id",
       "account_number": "123456789012"
-    },
-    "include_regions": ["us-east-1"],
-    "include_services": ["s3"]
+    }
   }'
-
-# Get scan status (replace SCAN_ID)
-curl http://localhost:8001/api/v1/scan/SCAN_ID/status
-
-# Get metrics
-curl http://localhost:8001/api/v1/metrics
 ```
 
-### 3. Test YAML Rule Builder API
+## Integration Testing
 
+### Test with Multiple Services
+
+**Start all services:**
 ```bash
-# Health check
-curl http://localhost:8002/api/v1/health
-
-# List services
-curl http://localhost:8002/api/v1/services
-
-# Get fields for a service
-curl http://localhost:8002/api/v1/services/s3/fields
-
-# Validate a rule
-curl -X POST http://localhost:8002/api/v1/rules/validate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "service": "s3",
-    "rule_id": "test-rule-1",
-    "conditions": [
-      {
-        "field": "BucketName",
-        "operator": "equals",
-        "value": "test-bucket"
-      }
-    ],
-    "logical_operator": "single"
-  }'
-
-# Generate a rule
-curl -X POST http://localhost:8002/api/v1/rules/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "service": "s3",
-    "title": "Test S3 Rule",
-    "description": "Test rule for S3 bucket",
-    "remediation": "Fix the bucket configuration",
-    "rule_id": "test-rule-1",
-    "conditions": [
-      {
-        "field": "BucketName",
-        "operator": "equals",
-        "value": "test-bucket"
-      }
-    ],
-    "logical_operator": "single"
-  }'
+./start_local_services.sh
 ```
 
-## Testing with Real AWS Credentials
+This starts:
+- Onboarding API on port 8000
+- AWS Engine API on port 8001
+- YAML Rule Builder API on port 8002
 
-To test with real AWS credentials:
+**Run integration tests:**
+```bash
+python3 test_local.py
+```
 
-1. **Set up AWS IAM Role**:
-   - Deploy the CloudFormation template from `onboarding/templates/aws_cloudformation.yaml`
-   - Get the Role ARN and External ID from the outputs
+## EKS Testing
 
-2. **Update test script**:
-   - Edit `test_local.py` and replace test credentials with real ones
-   - Or use the manual curl commands above with real credentials
+### Test Deployed API
 
-3. **Run scan**:
-   ```bash
-   curl -X POST http://localhost:8001/api/v1/scan \
-     -H "Content-Type: application/json" \
-     -d '{
-       "account": "YOUR_ACCOUNT_ID",
-       "credentials": {
-         "credential_type": "aws_iam_role",
-         "role_arn": "YOUR_ROLE_ARN",
-         "external_id": "YOUR_EXTERNAL_ID",
-         "account_number": "YOUR_ACCOUNT_ID"
-       },
-       "include_regions": ["us-east-1"],
-       "include_services": ["s3", "ec2"]
-     }'
-   ```
+**Get LoadBalancer URL:**
+```bash
+kubectl get svc onboarding-api-lb -n threat-engine-engines \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+```
+
+**Test health:**
+```bash
+curl http://<loadbalancer-url>/api/v1/health
+```
+
+**Port forward (alternative):**
+```bash
+kubectl port-forward svc/onboarding-api 8000:80 -n threat-engine-engines
+curl http://localhost:8000/api/v1/health
+```
+
+## Test Scenarios
+
+### Scenario 1: AWS IAM Role Onboarding
+
+1. Initialize onboarding → Get `onboarding_id`, `account_id`, `external_id`
+2. Download CloudFormation template
+3. Deploy CloudFormation in AWS account
+4. Copy CloudFormation JSON output
+5. Validate using `validate-json` endpoint
+6. Verify account is active
+
+### Scenario 2: AWS Access Key Onboarding
+
+1. Initialize onboarding
+2. Enter Access Key ID and Secret Key
+3. Validate using `validate` endpoint
+4. Verify account is active
+
+### Scenario 3: Schedule Management
+
+1. Create a schedule
+2. List schedules
+3. Trigger schedule manually
+4. View execution history
 
 ## Troubleshooting
 
-### Database Connection Issues
-- Ensure PostgreSQL is running: `docker ps`
-- Check connection string in `.env` or environment variables
-- Initialize schema: `psql -h localhost -U threatengine -d threatengine -f database/schema.sql`
+### DynamoDB Connection Issues
 
-### Port Already in Use
-- Check what's using the port: `lsof -i :8000`
-- Kill the process or use different ports
-- Update URLs in `test_local.py` if using different ports
+**Error:** `dynamodb: disconnected`
 
-### Import Errors
-- Ensure you're in the correct directory
-- Check PYTHONPATH is set correctly
-- Install missing dependencies: `pip install -r requirements.txt`
+**Solution:**
+```bash
+# Check AWS credentials
+aws sts get-caller-identity
 
-### Service Not Starting
-- Check logs for errors
-- Verify all dependencies are installed
-- Ensure database is accessible (for onboarding service)
+# Verify tables exist
+aws dynamodb list-tables --region ap-south-1 | grep threat-engine
 
-## Next Steps
+# Create tables if missing
+python3 -c "from onboarding.database.dynamodb_tables import create_tables; create_tables()"
+```
 
-After local testing:
-1. Build Docker images
-2. Deploy to Kubernetes
-3. Test in cluster environment
-4. Set up production credentials and secrets
+### Secrets Manager Issues
 
+**Error:** `secrets_manager: disconnected`
+
+**Solution:**
+```bash
+# Check KMS key
+aws kms describe-key --key-id alias/threat-engine-secrets --region ap-south-1
+
+# Check IAM permissions
+aws iam list-attached-role-policies --role-name threat-engine-platform-role
+```
+
+### API Not Starting
+
+**Check logs:**
+```bash
+python main.py
+# Look for import errors or configuration issues
+```
+
+**Verify environment:**
+```bash
+echo $AWS_REGION
+echo $SECRETS_MANAGER_PREFIX
+```
+
+## Test Data Cleanup
+
+**Clean up test data:**
+```python
+from onboarding.database.dynamodb_operations import dynamodb, TENANTS_TABLE
+
+# Delete test tenant
+table = dynamodb.Table(TENANTS_TABLE)
+table.delete_item(Key={'tenant_id': 'test-tenant-id'})
+```
+
+**Clean up secrets:**
+```python
+from onboarding.storage.secrets_manager_storage import secrets_manager_storage
+
+# Delete test secret
+secrets_manager_storage.delete('test-account-id')
+```
+
+## Automated Testing
+
+### Run All Tests
+
+```bash
+# Test AWS setup
+python3 test_aws_setup.py
+
+# Test API locally
+python3 test_local.py
+
+# Test with services
+./quick_test.sh
+```
+
+### Expected Results
+
+- ✅ All DynamoDB tables accessible
+- ✅ KMS key accessible
+- ✅ Secrets Manager accessible
+- ✅ IAM permissions correct
+- ✅ API endpoints responding
+- ✅ Health check passing
+
+---
+
+**See Also:**
+- [README.md](README.md) - Main documentation
+- [QUICK_START.md](QUICK_START.md) - Quick start guide
+- [UI_TEAM_HANDOVER.md](UI_TEAM_HANDOVER.md) - API documentation

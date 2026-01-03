@@ -2,11 +2,14 @@
 Credential storage and encryption
 """
 from onboarding.storage.secrets_manager_storage import secrets_manager_storage, SecretsManagerStorage
+
+# Note: EncryptionService is deprecated - credentials are now encrypted by AWS KMS via Secrets Manager
+# Kept for backward compatibility only
 from onboarding.storage.encryption import EncryptionService
 
 __all__ = [
     'secrets_manager_storage',
     'SecretsManagerStorage',
-    'EncryptionService'
+    'EncryptionService'  # Deprecated - use Secrets Manager instead
 ]
 
