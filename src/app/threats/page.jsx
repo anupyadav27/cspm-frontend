@@ -26,7 +26,7 @@ export default function Threats() {
     const [searchFilters, setSearchFilters] = useState({});
     const [filterValues, setFilterValues] = useState({});
     const [sortConfig, setSortConfig] = useState({ sortBy: null, order: null });
-    const [paginationData, setPaginationData] = useState(null);
+    const [totalCount, setTotalCount] = useState(0);
     const [downloadProgress, setDownloadProgress] = useState({ isDownloading: false, progress: 0 });
     const [docType, setDocType] = useState("xlsx");
 
@@ -82,7 +82,7 @@ export default function Threats() {
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
-                console.info("Export failed:", error);
+                console.error("Export failed:", error);
                 alert("Failed to generate export. Please try again.");
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
@@ -122,53 +122,65 @@ export default function Threats() {
             setDownloadProgress({ isDownloading: false, progress: 100 });
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
-            console.info("Download error:", error);
+            console.error("Download error:", error);
             alert("Download failed. Please try again.");
-        } finally {
-            if (downloadProgress.isDownloading) {
-                setDownloadProgress({ isDownloading: false, progress: 0 });
-            }
+            setDownloadProgress({ isDownloading: false, progress: 0 });
         }
     };
 
     const loadThreats = async (options = {}) => {
-        const { force = false, validate = false } = options;
+        const { force = true, validate = true } = options;
         try {
             dispatch({ type: "SET_LOADING", payload: true });
 
             const queryParams = new URLSearchParams();
-
             queryParams.append("page", page);
             queryParams.append("pageSize", pageSize);
 
+            // Handle search filters (field_search)
             for (const [key, value] of Object.entries(searchFilters)) {
                 if (value?.trim()) {
                     queryParams.append(`${key}_search`, value.trim());
                 }
             }
 
+            // Handle exact filters
             for (const [key, value] of Object.entries(filterValues)) {
-                if (value) {
-                    queryParams.append(key, value);
+                if (value !== undefined && value !== null && value !== "") {
+                    queryParams.append(key, String(value));
                 }
             }
 
+            // Handle sorting
             if (sortConfig.sortBy && sortConfig.order) {
                 queryParams.append("sort_by", sortConfig.sortBy);
                 queryParams.append("order", sortConfig.order.toLowerCase());
             }
 
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/threats?${queryParams.toString()}`;
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/threats/?${queryParams.toString()}`;
             const result = await fetchData(url, { force, validate });
 
-            if (result?.data) {
-                setThreats(result.data);
+            // Handle logout scenario
+            if (result.logOut) {
+                dispatch({ type: "LOGOUT" });
+                return;
             }
-            if (result?.pagination) {
-                setPaginationData(result.pagination);
+
+            // Handle errors
+            if (!result.success) {
+                console.error("Failed to load threats:", result.error || result.message);
+                setThreats([]);
+                setTotalCount(0);
+                return;
             }
+
+            // ✅ Correctly parse the API response
+            setThreats(Array.isArray(result.data) ? result.data : []);
+            setTotalCount(result.pagination?.total || 0);
         } catch (error) {
-            console.info("Error fetching threats:", error);
+            console.error("Error fetching threats:", error);
+            setThreats([]);
+            setTotalCount(0);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
@@ -191,33 +203,12 @@ export default function Threats() {
     };
 
     const handleEdit = (threat) => {
-        alert(`Editing threat: ${threat.title || threat.name}`);
+        alert(`Editing threat: ${threat.name}`);
     };
 
     const handleDelete = (threat) => {
-        if (
-            window.confirm(`Are you sure you want to delete threat ${threat.title || threat.name}?`)
-        ) {
+        if (window.confirm(`Are you sure you want to delete threat ${threat.name}?`)) {
             setThreats((prev) => prev.filter((t) => t.id !== threat.id));
-        }
-    };
-
-    const getIconForType = (type) => {
-        switch (type?.toLowerCase()) {
-            case "malware":
-            case "trojan":
-                return <FaBug className="text-red-500" />;
-            case "ddos":
-                return <FaExclamationTriangle className="text-orange-500" />;
-            case "unauthorized_access":
-            case "privilege_escalation":
-                return <FaShieldAlt className="text-purple-500" />;
-            case "data_exfiltration":
-                return <FaDatabase className="text-green-500" />;
-            case "network_intrusion":
-                return <FaNetworkWired className="text-blue-500" />;
-            default:
-                return <FaBug className="text-gray-500" />;
         }
     };
 
@@ -231,15 +222,15 @@ export default function Threats() {
             render: (value) => value?.slice(-6) || "-",
         },
         {
-            key: "title",
-            title: "Threat Title",
+            key: "name",
+            title: "Threat Name",
             searchable: true,
             sortable: true,
             width: 220,
             stick: true,
             render: (value, row) => (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontWeight: 500 }}>{value || row.name || "-"}</span>
+                    <span style={{ fontWeight: 500 }}>{value || "-"}</span>
                 </div>
             ),
         },
@@ -250,13 +241,6 @@ export default function Threats() {
             sortable: true,
             width: 180,
             render: (value) => value?.slice(-6) || "-",
-        },
-        {
-            key: "tenants__name",
-            title: "Tenant Name",
-            searchable: true,
-            sortable: true,
-            width: 180,
         },
         {
             key: "severity",
@@ -403,9 +387,10 @@ export default function Threats() {
             sortable: true,
             filterOptions: [
                 { label: "Active", value: "active" },
-                { label: "Investigating", value: "investigating" },
+                { label: "Mitigated", value: "mitigated" },
                 { label: "Resolved", value: "resolved" },
                 { label: "False Positive", value: "false_positive" },
+                { label: "Under Investigation", value: "under_investigation" },
             ],
             render: (value) => {
                 const status = value?.toLowerCase() || "";
@@ -417,11 +402,12 @@ export default function Threats() {
                         bgColor = "#fef3c7";
                         color = "#b45309";
                         break;
-                    case "investigating":
+                    case "under_investigation":
                         bgColor = "#dbeafe";
                         color = "#1d4ed8";
                         break;
                     case "resolved":
+                    case "mitigated":
                         bgColor = "#dcfce7";
                         color = "#166534";
                         break;
@@ -450,101 +436,6 @@ export default function Threats() {
                 );
             },
         },
-        // {
-        //     key: "type",
-        //     title: "Type",
-        //     filterable: true,
-        //     searchable: true,
-        //     sortable: true,
-        //     filterOptions: [
-        //         { label: "Malware", value: "malware" },
-        //         { label: "DDoS", value: "ddos" },
-        //         { label: "Unauthorized Access", value: "unauthorized_access" },
-        //         { label: "Data Exfiltration", value: "data_exfiltration" },
-        //         { label: "Network Intrusion", value: "network_intrusion" },
-        //         { label: "Privilege Escalation", value: "privilege_escalation" },
-        //     ],
-        //     render: (value) => {
-        //         const type = value?.toLowerCase() || "";
-        //         let bgColor = "#e5e7eb";
-        //         let color = "#374151";
-        //
-        //         switch (type) {
-        //             case "malware":
-        //             case "trojan":
-        //                 bgColor = "#fee2e2";
-        //                 color = "#dc2626";
-        //                 break;
-        //             case "ddos":
-        //                 bgColor = "#fef3c7";
-        //                 color = "#b45309";
-        //                 break;
-        //             case "unauthorized_access":
-        //             case "privilege_escalation":
-        //                 bgColor = "#dbeafe";
-        //                 color = "#1d4ed8";
-        //                 break;
-        //             case "data_exfiltration":
-        //                 bgColor = "#dcfce7";
-        //                 color = "#166534";
-        //                 break;
-        //             case "network_intrusion":
-        //                 bgColor = "#ede9fe";
-        //                 color = "#7e22ce";
-        //                 break;
-        //             default:
-        //                 bgColor = "#e5e7eb";
-        //                 color = "#374151";
-        //         }
-        //
-        //         return (
-        //             <span
-        //                 style={{
-        //                     backgroundColor: bgColor,
-        //                     color: color,
-        //                     padding: "4px 8px",
-        //                     borderRadius: "6px",
-        //                     fontSize: "12px",
-        //                     fontWeight: 600,
-        //                     display: "inline-flex",
-        //                     alignItems: "center",
-        //                     gap: "4px",
-        //                 }}
-        //             >
-        //                 {getIconForType(type)}
-        //                 {value?.toUpperCase() || "-"}
-        //             </span>
-        //         );
-        //     },
-        // },
-        // {
-        //     key: "region",
-        //     title: "Region",
-        //     width: 120,
-        //     searchable: true,
-        //     sortable: true,
-        //     render: (value) => value?.toUpperCase() || "-",
-        // // },
-        // {
-        //     key: "confidence",
-        //     title: "Confidence",
-        //     width: 100,
-        //     sortable: true,
-        //     render: (value) => {
-        //         if (value === null || value === undefined) return "-";
-        //         const confidence = parseInt(value);
-        //         let color = "#10b981"; // Default green for low scores
-        //         if (confidence >= 90)
-        //             color = "#dc2626"; // Red for high confidence
-        //         else if (confidence >= 70)
-        //             color = "#f59e0b"; // Yellow for medium
-        //         else if (confidence >= 50) color = "#fbbf24"; // Amber for low-medium
-        //
-        //         return (
-        //             <span style={{ color, fontWeight: 600, fontSize: "14px" }}>{confidence}%</span>
-        //         );
-        //     },
-        // },
         {
             key: "created_at",
             title: "Detected At",
@@ -562,7 +453,7 @@ export default function Threats() {
     ];
 
     return (
-        <Layout>
+        <Layout headerLabel="Threats">
             <TableGrid
                 columns={columns}
                 data={threats}
@@ -571,7 +462,7 @@ export default function Threats() {
                 controlledPageSize={pageSize}
                 onPageChange={setPage}
                 onPageSizeChange={setPageSize}
-                totalCount={paginationData?.total}
+                totalCount={totalCount}
                 onSearch={handleColumnSearch}
                 onFilter={handleFilterChange}
                 onSort={handleSort}
@@ -624,13 +515,12 @@ export default function Threats() {
                         <ProgressLoader
                             value={downloadProgress.progress}
                             max={100}
-                            color={`success`}
+                            color="success"
                             showLabel={true}
                         />
                     </div>
                 )}
             </div>
-            {JSON.stringify(threats[0], null, 2)}
         </Layout>
     );
 }

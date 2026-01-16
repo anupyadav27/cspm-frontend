@@ -18,7 +18,7 @@ export default function Tenants() {
     const [searchFilters, setSearchFilters] = useState({});
     const [filterValues, setFilterValues] = useState({});
     const [sortConfig, setSortConfig] = useState({ sortBy: null, order: null });
-    const [paginationData, setPaginationData] = useState(null);
+    const [totalCount, setTotalCount] = useState(0);
     const [downloadProgress, setDownloadProgress] = useState({ isDownloading: false, progress: 0 });
     const [docType, setDocType] = useState("xlsx");
 
@@ -74,7 +74,7 @@ export default function Tenants() {
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
-                console.info("Export failed:", error);
+                console.error("Export failed:", error);
                 alert("Failed to generate export. Please try again.");
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
@@ -114,53 +114,56 @@ export default function Tenants() {
             setDownloadProgress({ isDownloading: false, progress: 100 });
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
-            console.info("Download error:", error);
+            console.error("Download error:", error);
             alert("Download failed. Please try again.");
-        } finally {
-            if (downloadProgress.isDownloading) {
-                setDownloadProgress({ isDownloading: false, progress: 0 });
-            }
+            setDownloadProgress({ isDownloading: false, progress: 0 });
         }
     };
 
     const loadTenants = async (options = {}) => {
-        const { force = false, validate = false } = options;
+        const { force = true, validate = true } = options;
         try {
             dispatch({ type: "SET_LOADING", payload: true });
 
             const queryParams = new URLSearchParams();
-
             queryParams.append("page", page);
-            queryParams.append("pageSize", pageSize);
+            queryParams.append("pageSize", pageSize); // ✅ Matches Django's page_size_query_param
 
+            // Handle search filters (field_search)
             for (const [key, value] of Object.entries(searchFilters)) {
                 if (value?.trim()) {
                     queryParams.append(`${key}_search`, value.trim());
                 }
             }
 
+            // Handle exact filters (status, plan, region)
             for (const [key, value] of Object.entries(filterValues)) {
-                if (value) {
-                    queryParams.append(key, value);
+                if (value !== undefined && value !== null && value !== "") {
+                    queryParams.append(key, String(value));
                 }
             }
 
+            // Handle sorting
             if (sortConfig.sortBy && sortConfig.order) {
                 queryParams.append("sort_by", sortConfig.sortBy);
                 queryParams.append("order", sortConfig.order.toLowerCase());
             }
 
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/tenants?${queryParams.toString()}`;
-            const result = await fetchData(url, { force, validate });
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/tenants/?${queryParams.toString()}`;
 
-            if (result?.data) {
+            const result = await fetchData(url, { force:true, validate:true });
+            
+            if (result?.success && Array.isArray(result.data)) {
                 setTenants(result.data);
-            }
-            if (result?.pagination) {
-                setPaginationData(result.pagination);
+                setTotalCount(result.pagination?.total || 0);
+            } else {
+                setTenants([]);
+                setTotalCount(0);
             }
         } catch (error) {
-            console.info("Error fetching tenants:", error);
+            console.error("Error fetching tenants:", error);
+            setTenants([]);
+            setTotalCount(0);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
@@ -214,7 +217,7 @@ export default function Tenants() {
             title: "Description",
             searchable: true,
             sortable: true,
-            width: 250,
+            maxWidth: 400,
         },
         {
             key: "status",
@@ -223,13 +226,19 @@ export default function Tenants() {
             sortable: true,
             filterOptions: [
                 { label: "Active", value: "active" },
-                { label: "Pending", value: "pending" },
                 { label: "Inactive", value: "inactive" },
                 { label: "Suspended", value: "suspended" },
+                { label: "Trial", value: "trial" },
             ],
             render: (value) => {
                 const color =
-                    value === "active" ? "#22c55e" : value === "suspended" ? "#ef4444" : "#f59e0b";
+                    value === "active"
+                        ? "#22c55e"
+                        : value === "suspended"
+                          ? "#ef4444"
+                          : value === "trial"
+                            ? "#3b82f6"
+                            : "#f59e0b";
                 return (
                     <span style={{ color, fontWeight: 600 }}>
                         {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
@@ -243,15 +252,30 @@ export default function Tenants() {
             filterable: true,
             sortable: true,
             filterOptions: [
-                { label: "Standard", value: "standard" },
+                { label: "Free", value: "free" },
+                { label: "Basic", value: "basic" },
+                { label: "Pro", value: "pro" },
                 { label: "Enterprise", value: "enterprise" },
-                { label: "Premium", value: "premium" },
             ],
             render: (value) => (
                 <span
                     style={{
-                        backgroundColor: value === "enterprise" ? "#e6f3ff" : "#fef7e6",
-                        color: value === "enterprise" ? "#0b62a8" : "#9c6b00",
+                        backgroundColor:
+                            value === "enterprise"
+                                ? "#e6f3ff"
+                                : value === "pro"
+                                  ? "#f0fdf4"
+                                  : value === "basic"
+                                    ? "#fef7e6"
+                                    : "#f3e8ff",
+                        color:
+                            value === "enterprise"
+                                ? "#0b62a8"
+                                : value === "pro"
+                                  ? "#16a34a"
+                                  : value === "basic"
+                                    ? "#9c6b00"
+                                    : "#7e22ce",
                         padding: "2px 6px",
                         borderRadius: "6px",
                         fontSize: "12px",
@@ -267,6 +291,12 @@ export default function Tenants() {
             width: 120,
             searchable: true,
             sortable: true,
+            filterOptions: [
+                { label: "US East", value: "us-east" },
+                { label: "US West", value: "us-west" },
+                { label: "EU Central", value: "eu-central" },
+                { label: "AP South", value: "ap-south" },
+            ],
             render: (value) => value?.toUpperCase() || "-",
         },
         {
@@ -275,116 +305,6 @@ export default function Tenants() {
             searchable: true,
             sortable: true,
             width: 200,
-        },
-        {
-            key: "integration_aws_enabled",
-            title: "AWS Integration",
-            width: 150,
-            filterable: true,
-            sortable: true,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Enabled", value: "true" },
-                { label: "Disabled", value: "false" },
-            ],
-            render: (value) => (
-                <span
-                    style={{
-                        color: value ? "#22c55e" : "#9ca3af",
-                        fontWeight: 600,
-                    }}
-                >
-                    {value ? "Enabled" : "Disabled"}
-                </span>
-            ),
-        },
-        {
-            key: "integration_slack_enabled",
-            title: "Slack Integration",
-            width: 150,
-            filterable: true,
-            sortable: true,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Enabled", value: "true" },
-                { label: "Disabled", value: "false" },
-            ],
-            render: (value) => (
-                <span
-                    style={{
-                        color: value ? "#22c55e" : "#9ca3af",
-                        fontWeight: 600,
-                    }}
-                >
-                    {value ? "Enabled" : "Disabled"}
-                </span>
-            ),
-        },
-        {
-            key: "integration_siem_enabled",
-            title: "SIEM Integration",
-            width: 150,
-            filterable: true,
-            sortable: true,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Enabled", value: "true" },
-                { label: "Disabled", value: "false" },
-            ],
-            render: (value) => (
-                <span
-                    style={{
-                        color: value ? "#22c55e" : "#9ca3af",
-                        fontWeight: 600,
-                    }}
-                >
-                    {value ? "Enabled" : "Disabled"}
-                </span>
-            ),
-        },
-        {
-            key: "security_sso_enabled",
-            title: "SSO Enabled",
-            width: 120,
-            filterable: true,
-            sortable: true,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Enabled", value: "true" },
-                { label: "Disabled", value: "false" },
-            ],
-            render: (value) => (
-                <span
-                    style={{
-                        color: value ? "#22c55e" : "#9ca3af",
-                        fontWeight: 600,
-                    }}
-                >
-                    {value ? "Yes" : "No"}
-                </span>
-            ),
-        },
-        {
-            key: "billing_payment_status",
-            title: "Payment Status",
-            width: 150,
-            filterable: true,
-            sortable: true,
-            filterOptions: [
-                { label: "All", value: "" },
-                { label: "Active", value: "active" },
-                { label: "Inactive", value: "inactive" },
-                { label: "Overdue", value: "overdue" },
-            ],
-            render: (value) => {
-                const color =
-                    value === "active" ? "#22c55e" : value === "overdue" ? "#ef4444" : "#f59e0b";
-                return (
-                    <span style={{ color, fontWeight: 600 }}>
-                        {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
-                    </span>
-                );
-            },
         },
         {
             key: "created_at",
@@ -403,7 +323,7 @@ export default function Tenants() {
     ];
 
     return (
-        <Layout headerLabel={`Tenants`}>
+        <Layout headerLabel="Tenants">
             <TableGrid
                 columns={columns}
                 data={tenants}
@@ -412,7 +332,7 @@ export default function Tenants() {
                 controlledPageSize={pageSize}
                 onPageChange={setPage}
                 onPageSizeChange={setPageSize}
-                totalCount={paginationData?.total}
+                totalCount={totalCount}
                 onSearch={handleColumnSearch}
                 onFilter={handleFilterChange}
                 onSort={handleSort}
@@ -421,8 +341,8 @@ export default function Tenants() {
                 maxWidth="100%"
                 renderNoData={() => "No tenants found"}
             />
-            <div className="assets__main-container">
-                <div className="assets__container-exportbtn">
+            <div className="tenants__main-container">
+                <div className="tenants__container-exportbtn">
                     <Button
                         onClick={() => downloadFile("pdf")}
                         disabled={downloadProgress.isDownloading}
@@ -453,7 +373,7 @@ export default function Tenants() {
                         <ProgressLoader
                             value={downloadProgress.progress}
                             max={100}
-                            color={`success`}
+                            color="success"
                             showLabel={true}
                         />
                     </div>

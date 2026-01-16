@@ -6,6 +6,7 @@ import { appReducer, initialState } from "./reducer";
 import notificationsData from "@/data/samples/notifications.json";
 import { fetchData } from "@/utils/fetchData";
 import handleLogout from "@/utils/handleLogout/index.jsx";
+import { ensureCsrf } from "@/utils/csrf";
 
 const AppContext = createContext();
 
@@ -53,11 +54,14 @@ export const AppProvider = ({ children }) => {
     const initializeApp = async () => {
         setLoading(true);
         try {
+            
+            await ensureCsrf();
+            
             let { user, isAuthenticated } = state;
 
             if (!isAuthenticated || !user) {
                 try {
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh/`, {
                         method: "POST",
                         credentials: "include",
                     });

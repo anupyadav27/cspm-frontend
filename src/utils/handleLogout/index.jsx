@@ -2,7 +2,7 @@ import { clearClientData } from "@/utils/clearClientData";
 
 const handleLogout = async (dispatch) => {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout/`, {
             method: "POST",
             credentials: "include",
         });

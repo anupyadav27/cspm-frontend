@@ -36,7 +36,7 @@ export default function Login() {
         }),
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login/`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
@@ -86,7 +86,7 @@ export default function Login() {
     const handleShowPassword = () => setShowPassword(!showPassword);
 
     const handleSSOLogin = () => {
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/saml/login`;
+        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/saml/login/`;
     };
 
     return (

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+import { FaSort, FaSortDown, FaSortUp } from "react-icons/fa";
 
 const TableGrid = ({
     columns,
@@ -336,27 +336,32 @@ const TableGrid = ({
                                                         maxWidth: col.maxWidth
                                                             ? `${col.maxWidth}px`
                                                             : "none",
-                                                        whiteSpace: col.maxWidth
-                                                            ? "normal"
-                                                            : "nowrap",
-                                                        overflowWrap: col.maxWidth
-                                                            ? "break-word"
-                                                            : "normal",
-                                                        textOverflow: col.maxWidth
-                                                            ? "clip"
-                                                            : "ellipsis",
                                                         width: "fit-content",
                                                         ...stickyStyle,
                                                     }}
+                                                    title={
+                                                        typeof cellValue === "string"
+                                                            ? cellValue
+                                                            : ""
+                                                    }
                                                 >
                                                     {(() => {
                                                         const cellValue = getNestedValue(
                                                             row,
                                                             col.key
                                                         );
-                                                        return col.render
+                                                        const displayValue = col.render
                                                             ? col.render(cellValue, row)
                                                             : (cellValue ?? "");
+                                                        
+                                                        if (typeof displayValue === "string") {
+                                                            return (
+                                                                <div className="rtg__cell-truncated">
+                                                                    {displayValue}
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return displayValue;
                                                     })()}
                                                 </td>
                                             );

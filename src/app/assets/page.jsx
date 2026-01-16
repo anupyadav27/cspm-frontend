@@ -18,7 +18,7 @@ export default function Assets() {
     const [searchFilters, setSearchFilters] = useState({});
     const [filterValues, setFilterValues] = useState({});
     const [sortConfig, setSortConfig] = useState({ sortBy: null, order: null });
-    const [paginationData, setPaginationData] = useState(null);
+    const [totalCount, setTotalCount] = useState(0);
     const [downloadProgress, setDownloadProgress] = useState({ isDownloading: false, progress: 0 });
     const [docType, setDocType] = useState("xlsx");
 
@@ -74,7 +74,7 @@ export default function Assets() {
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
-                console.info("Export failed:", error);
+                console.error("Export failed:", error);
                 alert("Failed to generate export. Please try again.");
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
@@ -114,53 +114,65 @@ export default function Assets() {
             setDownloadProgress({ isDownloading: false, progress: 100 });
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
-            console.info("Download error:", error);
+            console.error("Download error:", error);
             alert("Download failed. Please try again.");
-        } finally {
-            if (downloadProgress.isDownloading) {
-                setDownloadProgress({ isDownloading: false, progress: 0 });
-            }
+            setDownloadProgress({ isDownloading: false, progress: 0 });
         }
     };
 
     const loadAssets = async (options = {}) => {
-        const { force = false, validate = false } = options;
+        const { force = true, validate = true } = options;
         try {
             dispatch({ type: "SET_LOADING", payload: true });
 
             const queryParams = new URLSearchParams();
-
             queryParams.append("page", page);
             queryParams.append("pageSize", pageSize);
 
+            // Handle search filters (field_search)
             for (const [key, value] of Object.entries(searchFilters)) {
                 if (value?.trim()) {
                     queryParams.append(`${key}_search`, value.trim());
                 }
             }
 
+            // Handle exact filters
             for (const [key, value] of Object.entries(filterValues)) {
-                if (value) {
-                    queryParams.append(key, value);
+                if (value !== undefined && value !== null && value !== "") {
+                    queryParams.append(key, String(value));
                 }
             }
 
+            // Handle sorting
             if (sortConfig.sortBy && sortConfig.order) {
                 queryParams.append("sort_by", sortConfig.sortBy);
                 queryParams.append("order", sortConfig.order.toLowerCase());
             }
 
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/assets?${queryParams.toString()}`;
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/assets/?${queryParams.toString()}`;
             const result = await fetchData(url, { force, validate });
 
-            if (result?.data) {
-                setAssets(result.data);
+            // Handle logout scenario
+            if (result.logOut) {
+                dispatch({ type: "LOGOUT" });
+                return;
             }
-            if (result?.pagination) {
-                setPaginationData(result.pagination);
+
+            // Handle errors
+            if (!result.success) {
+                console.error("Failed to load assets:", result.error || result.message);
+                setAssets([]);
+                setTotalCount(0);
+                return;
             }
+
+            // ✅ Correctly parse the API response
+            setAssets(Array.isArray(result.data) ? result.data : []);
+            setTotalCount(result.pagination?.total || 0);
         } catch (error) {
-            console.info("Error fetching assets:", error);
+            console.error("Error fetching assets:", error);
+            setAssets([]);
+            setTotalCount(0);
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
@@ -221,13 +233,6 @@ export default function Assets() {
             sortable: true,
             width: 180,
             render: (value) => value?.slice(-6) || "-",
-        },
-        {
-            key: "tenants__name",
-            title: "Tenant Name",
-            searchable: true,
-            sortable: true,
-            width: 180,
         },
         {
             key: "resource_type",
@@ -574,94 +579,91 @@ export default function Assets() {
     ];
 
     return (
-        <Layout>
-            <div>
-                <TableGrid
-                    columns={columns}
-                    data={assets}
-                    paginationMode="server"
-                    controlledPage={page}
-                    controlledPageSize={pageSize}
-                    onPageChange={setPage}
-                    onPageSizeChange={setPageSize}
-                    totalCount={paginationData?.total}
-                    onSearch={handleColumnSearch}
-                    onFilter={handleFilterChange}
-                    onSort={handleSort}
-                    pageSizeOptions={[10, 20, 50, 100]}
-                    maxHeight="60vh"
-                    maxWidth="100%"
-                    renderNoData={() => (
-                        <div
+        <Layout headerLabel="Assets">
+            <TableGrid
+                columns={columns}
+                data={assets}
+                paginationMode="server"
+                controlledPage={page}
+                controlledPageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                totalCount={totalCount}
+                onSearch={handleColumnSearch}
+                onFilter={handleFilterChange}
+                onSort={handleSort}
+                pageSizeOptions={[10, 20, 50, 100]}
+                maxHeight="60vh"
+                maxWidth="100%"
+                renderNoData={() => (
+                    <div
+                        style={{
+                            textAlign: "center",
+                            padding: "60px 20px",
+                            color: "#6b7280",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "8px",
+                            border: "1px dashed #d1d5db",
+                        }}
+                    >
+                        <FaBox size={64} style={{ margin: "0 auto 16px", color: "#d1d5db" }} />
+                        <h3
                             style={{
-                                textAlign: "center",
-                                padding: "60px 20px",
-                                color: "#6b7280",
-                                backgroundColor: "#f9fafb",
-                                borderRadius: "8px",
-                                border: "1px dashed #d1d5db",
+                                fontSize: "20px",
+                                fontWeight: 600,
+                                marginBottom: "8px",
+                                color: "#374151",
                             }}
                         >
-                            <FaBox size={64} style={{ margin: "0 auto 16px", color: "#d1d5db" }} />
-                            <h3
-                                style={{
-                                    fontSize: "20px",
-                                    fontWeight: 600,
-                                    marginBottom: "8px",
-                                    color: "#374151",
-                                }}
-                            >
-                                No Assets Found
-                            </h3>
-                            <p style={{ fontSize: "16px", marginBottom: "16px" }}>
-                                There are currently no assets matching your search criteria.
-                            </p>
-                            <Button onClick={() => {}} text="Add New Asset" primary />
-                        </div>
-                    )}
-                />
+                            No Assets Found
+                        </h3>
+                        <p style={{ fontSize: "16px", marginBottom: "16px" }}>
+                            There are currently no assets matching your search criteria.
+                        </p>
+                    </div>
+                )}
+            />
 
-                <div className="assets__main-container">
-                    <div className="assets__container-exportbtn">
-                        <Button
-                            onClick={() => downloadFile("pdf")}
-                            disabled={downloadProgress.isDownloading}
-                            text={
-                                downloadProgress.isDownloading && docType === "pdf"
-                                    ? "Exporting PDF..."
-                                    : "Download PDF"
-                            }
-                            danger
-                            iconRight={<FaDownload />}
-                        />
+            <div className="assets__main-container">
+                <div className="assets__container-exportbtn">
+                    <Button
+                        onClick={() => downloadFile("pdf")}
+                        disabled={downloadProgress.isDownloading}
+                        text={
+                            downloadProgress.isDownloading && docType === "pdf"
+                                ? "Exporting PDF..."
+                                : "Download PDF"
+                        }
+                        danger
+                        iconRight={<FaDownload />}
+                    />
 
-                        <Button
-                            onClick={() => downloadFile("xlsx")}
-                            disabled={downloadProgress.isDownloading}
-                            text={
-                                downloadProgress.isDownloading && docType === "xlsx"
-                                    ? "Exporting Excel..."
-                                    : "Download Excel"
-                            }
-                            success
-                            iconRight={<FaDownload />}
+                    <Button
+                        onClick={() => downloadFile("xlsx")}
+                        disabled={downloadProgress.isDownloading}
+                        text={
+                            downloadProgress.isDownloading && docType === "xlsx"
+                                ? "Exporting Excel..."
+                                : "Download Excel"
+                        }
+                        success
+                        iconRight={<FaDownload />}
+                    />
+                </div>
+
+                {downloadProgress.isDownloading && (
+                    <div
+                        className="progress__loader-container"
+                        style={{ maxWidth: "500px", margin: "0 auto" }}
+                    >
+                        <ProgressLoader
+                            value={downloadProgress.progress}
+                            max={100}
+                            color="success"
+                            showLabel={true}
                         />
                     </div>
-
-                    {downloadProgress.isDownloading && (
-                        <div
-                            className="progress__loader-container"
-                            style={{ maxWidth: "500px", margin: "0 auto" }}
-                        >
-                            <ProgressLoader
-                                value={downloadProgress.progress}
-                                max={100}
-                                color={`success`}
-                                showLabel={true}
-                            />
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
         </Layout>
     );
