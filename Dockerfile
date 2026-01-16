@@ -10,6 +10,10 @@ FROM node:${NODE_VERSION}-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Set API URL for build
+ENV NEXT_PUBLIC_API_URL=http://ac2b6937e3cbc4e499e82a26ea72c642-1571994199.ap-south-1.elb.amazonaws.com
+
 RUN npm run build
 
 # Production image
