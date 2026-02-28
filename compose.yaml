@@ -1,10 +1,20 @@
 services:
   cspm_ui:
+    image: ayushjha/cspm-ui:latest
+    container_name: cspm_ui
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
+      PORT: 3000
     ports:
       - "3000:3000"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -33,7 +33,7 @@ export default function Users() {
     }, []);
 
     const handleEdit = (user) => {
-        alert(`Editing user: ${user.email}`);
+        console.log(`Editing user: ${user.email}`);
     };
 
     const handleDelete = (user) => {

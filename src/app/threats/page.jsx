@@ -82,8 +82,7 @@ export default function Threats() {
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
-                console.error("Export failed:", error);
-                alert("Failed to generate export. Please try again.");
+                console.info("Export failed:", error);
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
             }
@@ -122,8 +121,7 @@ export default function Threats() {
             setDownloadProgress({ isDownloading: false, progress: 100 });
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
-            console.error("Download error:", error);
-            alert("Download failed. Please try again.");
+            console.info("Download error:", error);
             setDownloadProgress({ isDownloading: false, progress: 0 });
         }
     };
@@ -168,7 +166,7 @@ export default function Threats() {
 
             // Handle errors
             if (!result.success) {
-                console.error("Failed to load threats:", result.error || result.message);
+                console.info("Failed to load threats:", result.error || result.message);
                 setThreats([]);
                 setTotalCount(0);
                 return;
@@ -178,7 +176,7 @@ export default function Threats() {
             setThreats(Array.isArray(result.data) ? result.data : []);
             setTotalCount(result.pagination?.total || 0);
         } catch (error) {
-            console.error("Error fetching threats:", error);
+            console.info("Error fetching threats:", error);
             setThreats([]);
             setTotalCount(0);
         } finally {
@@ -203,7 +201,7 @@ export default function Threats() {
     };
 
     const handleEdit = (threat) => {
-        alert(`Editing threat: ${threat.name}`);
+        console.log(`Editing threat: ${threat.name}`);
     };
 
     const handleDelete = (threat) => {

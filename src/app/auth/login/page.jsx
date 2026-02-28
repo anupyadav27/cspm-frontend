@@ -36,12 +36,14 @@ export default function Login() {
         }),
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             try {
+                console.log(process.env.NEXT_PUBLIC_API_URL);
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login/`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
                     body: JSON.stringify(values),
                 });
+                console.log(JSON.stringify(res, null, 2));
 
                 const data = await res.json();
 
@@ -70,13 +72,13 @@ export default function Login() {
                         setFieldError("email", "User not found");
                         break;
                     case 429:
-                        alert("Too many login attempts. Please try again later.");
+                        console.info("Too many login attempts. Please try again later.");
                         break;
                     default:
-                        alert(data.message || "An unexpected error occurred.");
+                        console.info(data.message || "An unexpected error occurred.");
                 }
             } catch (error) {
-                alert("Network error. Please check your connection.");
+                console.info("Network error. Please check your connection.");
             } finally {
                 setSubmitting(false);
             }

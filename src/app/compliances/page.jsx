@@ -83,7 +83,6 @@ export default function Compliance() {
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
                 console.info("Export failed:", error);
-                alert("Failed to generate export. Please try again.");
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
             }
@@ -123,7 +122,6 @@ export default function Compliance() {
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
             console.info("Download error:", error);
-            alert("Download failed. Please try again.");
         } finally {
             if (downloadProgress.isDownloading) {
                 setDownloadProgress({ isDownloading: false, progress: 0 });
@@ -191,7 +189,7 @@ export default function Compliance() {
     };
 
     const handleEdit = (complianceItem) => {
-        alert(`Editing compliance item: ${complianceItem.control_id}`);
+        console.log(`Editing compliance item: ${complianceItem.control_id}`);
     };
 
     const handleDelete = (complianceItem) => {

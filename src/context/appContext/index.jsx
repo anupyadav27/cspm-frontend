@@ -95,7 +95,6 @@ export const AppProvider = ({ children }) => {
                         validate: true,
                     }
                 );
-                alert(JSON.stringify(tenantData));
 
                 if (tenantData.error || ![200, 304].includes(tenantData.status)) {
                     dispatch({ type: "SET_INITIALIZED", payload: false });

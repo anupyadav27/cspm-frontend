@@ -54,12 +54,14 @@ export default function Header({ title }) {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+    
+    const capitalize = (str) => str[0].toUpperCase() + str.slice(1);
 
     return (
         <header className="header">
             <div className="header__content">
                 <div className="header__left">
-                    <h1 className="header__title">{title}</h1>
+                    <h1 className="header__title">{capitalize(title.toString())}</h1>
                 </div>
 
                 <div className="header__actions">

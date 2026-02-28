@@ -62,7 +62,7 @@ export const fetchData = async (url, { force = false, validate = false } = {}) =
             typeof apiResponse.success === "boolean" && "data" in apiResponse;
         
         if (!isValidStructure) {
-            console.error("Invalid API response structure:", apiResponse);
+            console.info("Invalid API response structure:", apiResponse);
             return {
                 success: false,
                 message: "Invalid API response format",
@@ -87,7 +87,7 @@ export const fetchData = async (url, { force = false, validate = false } = {}) =
             fromCache,
         };
     } catch (networkError) {
-        console.error("Network error during fetch:", networkError);
+        console.info("Network error during fetch:", networkError);
         return {
             success: false,
             message: "Network error",

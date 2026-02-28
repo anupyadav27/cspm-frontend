@@ -74,8 +74,7 @@ export default function Tenants() {
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
-                console.error("Export failed:", error);
-                alert("Failed to generate export. Please try again.");
+                console.info("Export failed:", error);
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
             }
@@ -114,8 +113,7 @@ export default function Tenants() {
             setDownloadProgress({ isDownloading: false, progress: 100 });
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
-            console.error("Download error:", error);
-            alert("Download failed. Please try again.");
+            console.info("Download error:", error);
             setDownloadProgress({ isDownloading: false, progress: 0 });
         }
     };
@@ -161,7 +159,7 @@ export default function Tenants() {
                 setTotalCount(0);
             }
         } catch (error) {
-            console.error("Error fetching tenants:", error);
+            console.info("Error fetching tenants:", error);
             setTenants([]);
             setTotalCount(0);
         } finally {
@@ -186,7 +184,7 @@ export default function Tenants() {
     };
 
     const handleEdit = (tenant) => {
-        alert(`Editing tenant: ${tenant.name}`);
+        console.log(`Editing tenant: ${tenant.name}`);
     };
 
     const handleDelete = (tenant) => {

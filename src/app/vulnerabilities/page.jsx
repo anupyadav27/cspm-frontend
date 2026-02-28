@@ -75,7 +75,6 @@ export default function Vulnerabilities() {
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}));
                 console.info("Export failed:", error);
-                alert("Failed to generate export. Please try again.");
                 setDownloadProgress({ isDownloading: false, progress: 0 });
                 return;
             }
@@ -115,7 +114,6 @@ export default function Vulnerabilities() {
             setTimeout(() => setDownloadProgress({ isDownloading: false, progress: 0 }), 1000);
         } catch (error) {
             console.info("Download error:", error);
-            alert("Download failed. Please try again.");
         } finally {
             if (downloadProgress.isDownloading) {
                 setDownloadProgress({ isDownloading: false, progress: 0 });
@@ -183,7 +181,7 @@ export default function Vulnerabilities() {
     };
 
     const handleEdit = (vulnerability) => {
-        alert(`Editing vulnerability: ${vulnerability.cve_id}`);
+        console.log(`Editing vulnerability: ${vulnerability.cve_id}`);
     };
 
     const handleDelete = (vulnerability) => {
