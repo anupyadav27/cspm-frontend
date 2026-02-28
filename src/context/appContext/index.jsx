@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { appReducer, initialState } from "./reducer";
 import notificationsData from "@/data/samples/notifications.json";
 import { fetchData } from "@/utils/fetchData";
-import handleLogout from "@/utils/handleLogout/index.jsx";
+import handleLogout from "@/utils/handleLogout";
 import { ensureCsrf } from "@/utils/csrf";
 
 const AppContext = createContext();
