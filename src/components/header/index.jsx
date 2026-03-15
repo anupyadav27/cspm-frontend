@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import notificationsData from "@/data/samples/notifications.json";
+// import notificationsData from "@/data/samples/notifications.json";
 import { useTenantActions } from "@/context/appContext/useTenantActions";
 import { useAuthActions } from "@/context/appContext/useAuthActions";
 import { useAppContext } from "@/context/appContext";
@@ -17,6 +17,7 @@ export default function Header({ title }) {
     const { state, dispatch } = useAppContext();
     const { handleLogout } = useAuthActions();
     const { switchTenant } = useTenantActions();
+    const notificationsData = {}
 
     const userMenuRef = useRef(null);
     const tenantMenuRef = useRef(null);
@@ -25,9 +26,10 @@ export default function Header({ title }) {
         setCurrentUser(state?.user);
         setTenants(state?.tenants?.data || []);
         setSelectedTenant(state?.selectedTenant || null);
-    }, [state]);
+    }, [ state]);
 
-    const unreadCount = notificationsData.notifications?.filter((n) => !n.read).length || 0;
+
+    const unreadCount = notificationsData?.notifications?.filter((n) => !n.read).length || 0;
 
     const handleTenantSwitch = (tenantId) => {
         switchTenant(tenantId);
@@ -139,8 +141,7 @@ export default function Header({ title }) {
                             }}
                         >
                             <div className="header__avatar">
-                                {currentUser?.name?.split(" ")[0][0]}
-                                {currentUser?.name?.split(" ")[1][0]}
+                                {currentUser?.email[0].toUpperCase()}
                             </div>
                         </button>
 

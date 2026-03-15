@@ -1,9 +1,10 @@
 import { useAppContext } from "@/context/appContext";
-import usersData from "@/data/samples/users.json";
+// import usersData from "@/data/samples/users.json";
 import { clearClientData } from "@/utils/clearClientData/index.jsx";
 
 export const useAuthActions = () => {
     const { state, dispatch } = useAppContext();
+    const usersData = {}
 
     const handleLogin = async (email, password) => {
         const user = usersData.users.find((u) => u.email === email && u.password === password);

@@ -55,12 +55,26 @@ export function appReducer(state, action) {
             };
             break;
 
-        case "SELECT_TENANT":
+        case "SELECT_TENANT": {
+            const selectedStr = action.payload?.id ? String(action.payload.id) : null;
+            let activeRole = state.user?.roles?.find((r) => r.scope_level === "system") || null;
+
+            if (selectedStr) {
+                const tenantRole = state.user?.roles?.find(
+                    (r) => String(r.tenant_id) === selectedStr
+                );
+                if (tenantRole) {
+                    activeRole = tenantRole;
+                }
+            }
+
             newState = {
                 ...state,
                 selectedTenant: action.payload,
+                role: activeRole,
             };
             break;
+        }
 
         case "SET_NOTIFICATIONS":
             newState = {

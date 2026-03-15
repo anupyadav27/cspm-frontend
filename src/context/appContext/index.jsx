@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useReducer, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { appReducer, initialState } from "./reducer";
-import notificationsData from "@/data/samples/notifications.json";
+// import notificationsData from "@/data/samples/notifications.json";
 import { fetchData } from "@/utils/fetchData";
 import handleLogout from "@/utils/handleLogout";
 import { ensureCsrf } from "@/utils/csrf";
@@ -15,6 +15,7 @@ export const AppProvider = ({ children }) => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [retryCount, setRetryCount] = useState(0);
+    const notificationData = {}
 
     const savedState =
         typeof window !== "undefined" && sessionStorage.getItem("appState")

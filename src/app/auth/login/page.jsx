@@ -160,7 +160,7 @@ export default function Login() {
                             <Button
                                 type="submit"
                                 text="Submit"
-                                className="btn-primary !w-full"
+                                className="btn-primary w-full!"
                                 isLoading={formik.isSubmitting}
                             />
                         </form>
@@ -168,7 +168,7 @@ export default function Login() {
                         <Button
                             type="button"
                             text="SSO Login"
-                            className="btn-secondary !w-full mt-2"
+                            className="btn-secondary w-full! mt-2"
                             onClick={handleSSOLogin}
                         />
 
